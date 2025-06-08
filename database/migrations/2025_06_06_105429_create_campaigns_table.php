@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('location');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
-            $table->string('status');
+            $table->enum('status',['draft','active','completed','cancelled']);
             $table->text('description');
             $table->boolean('needs_volunteers');
             $table->boolean('needs_donations');

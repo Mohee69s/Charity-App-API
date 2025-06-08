@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class CampaignController extends Controller
 {
     public function index(Request $request){
-        $camps=Campaign::all();
+        $camps=Campaign::with('CampaignMedia')->get();
         return response()->json([
             'campaigns' => $camps
         ]);
@@ -34,6 +34,16 @@ class CampaignController extends Controller
         $user = auth();
         $wallet = wallet::where('user_id',$user->id());
         $camp=Campaign::where('campaign_id',$request->campaign_id);
+        if($camp->status != 'active'){
+            return response()->json([
+                'message'=>"the requested camp is in phase {$camp->status}, you can\'t make donations"
+            ]);
+        }
+        if($camp->achieved >= $camp->goal){
+            return response()->json([
+                'message'=>'the goal has been achieved'
+            ]);
+        }
         if ($wallet->wallet_pin === $request->wallet_pin){
             if($wallet->balance >= $request->amount){
                 $wallet->balance -=$request->amount;
@@ -44,7 +54,7 @@ class CampaignController extends Controller
                     'wallet_id'=>$wallet->id,
                     'type'=>'donation',
                     'amount'=>$request->amount,
-                    'reference_id'=>$camp->id,
+                    'campaign_id'=>$camp->id,
                 ])->save();
                 return response()->json([
                     'message'=>'Donation Completed',

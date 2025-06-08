@@ -9,4 +9,7 @@ class CampaignMedia extends Model
 {
     /** @use HasFactory<\Database\Factories\CampaignMediaFactory> */
     use HasFactory;
+    public function campaign(){
+        return $this->belongsTo(Campaign::class);
+    }
 }

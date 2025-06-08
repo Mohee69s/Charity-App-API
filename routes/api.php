@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WalletTransactionsController;
 use Illuminate\Http\Request;
@@ -12,10 +13,13 @@ Route::post('/register',[RegisterController::class,"register"]);
 
 Route::middleware(['auth:api'])->group(function () {
 
+    Route::get('/logout',[AuthController::class,'destroy']);
     Route::post('/wallet/create',[WalletController::class,'store']);
     Route::post('/wallet',[WalletController::class,'index']);
     Route::patch('/wallet/pay',[WalletController::class,'update']);
     Route::get('/wallet/transactions',[WalletTransactionsController::class,'index']);
-    Route::get('/user',[AuthController::class,'destroy']);
+    Route::get('/campaigns',[CampaignController::class,'index']);
+    Route::get('/campaigns',[CampaignController::class,'camp'])
+    
     
 });

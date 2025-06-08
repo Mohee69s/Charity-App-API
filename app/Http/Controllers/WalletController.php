@@ -59,7 +59,7 @@ class WalletController extends Controller
             'wallet_id'=>$wallet->id,
             'type'=>'topup',
             'amount'=>$request->amount,
-            'reference_id'=>null,
+            'campaign_id'=>null,
             'created_at'=>Carbon::now(),
             'updated_at'=>Carbon::now()
         ])->save();

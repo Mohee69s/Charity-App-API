@@ -1,5 +1,7 @@
 <?php
 
+
+use App\Models\Campaign;
 use App\Models\wallet;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -17,7 +19,7 @@ return new class extends Migration
             $table->foreignIdFor(wallet::class);
             $table->enum('type',['topup','donation']);
             $table->bigInteger('amount');
-            $table->integer('reference_id')->nullable();
+            $table->foreignIdFor(Campaign::class)->nullable();
             $table->timestamps();
         });
     }
