@@ -19,6 +19,12 @@ class AuthController extends Controller
             'expires_in' => auth('api')->factory()->getTTL() * 60
         ]);
     }
+    public function destroy(Request $request){
+        JWTAuth::parseToken()->invalidate(true);
+        return response()->json([
+            'message' => 'Logged out'
+        ]);
+    }
     public function me()
     {
         return response()->json(auth()->user());

@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\wallet;
-use DB;
+use App\Models\WalletTransaction;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class WalletController extends Controller
@@ -52,7 +53,18 @@ class WalletController extends Controller
             ]);
         }
         $wallet->balance +=$request->amount;
+        
         $wallet->save();
+        WalletTransaction::create([
+            'wallet_id'=>$wallet->id,
+            'type'=>'topup',
+            'amount'=>$request->amount,
+            'reference_id'=>null,
+            'created_at'=>Carbon::now(),
+            'updated_at'=>Carbon::now()
+        ])->save();
+
+        
         return response()->json([
             'message' => 'balance updated successfully',
             'balance' => $wallet->balance

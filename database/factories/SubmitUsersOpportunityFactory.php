@@ -5,9 +5,9 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\donation>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\submit_users_opportunity>
  */
-class DonationFactory extends Factory
+class SubmitUsersOpportunityFactory extends Factory
 {
     /**
      * Define the model's default state.
