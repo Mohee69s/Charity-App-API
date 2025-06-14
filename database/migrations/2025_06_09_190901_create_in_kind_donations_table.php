@@ -1,40 +1,26 @@
 <?php
 
-
-
-
-
 use App\Models\Campaign;
-
-use App\Models\wallet;
-
+use App\Models\Donation;
 use Illuminate\Database\Migrations\Migration;
-
 use Illuminate\Database\Schema\Blueprint;
-
 use Illuminate\Support\Facades\Schema;
-
-
+use app\Models\User;
 
 return new class extends Migration
-
 {
-
     /**
-     *
      * Run the migrations.
-     *
      */
-
     public function up(): void
-
     {
-        Schema::create('wallet_transactions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignIdFor(wallet::class);
-            $table->enum('type',['topup','donation']);
-            $table->bigInteger('amount');
+        Schema::create('in_kind_donations', function (Blueprint $table) {
+            $table->id();   
+            $table->foreignIdFor(User::class);
             $table->foreignIdFor(Campaign::class)->nullable();
+            $table->string('name');
+            $table->text('description');
+            $table->enum('status',['approved','pending','rejected'])->default('pending');
             $table->timestamps();
         });
     }
@@ -44,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('wallet_transactions');
+        Schema::dropIfExists('in_kind_donations');
     }
 };

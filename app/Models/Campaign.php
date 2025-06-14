@@ -15,4 +15,10 @@ class Campaign extends Model
     public function CampaignMedia(){
         return $this->hasOne(CampaignMedia::class);
     }
+    public function Donation(){
+        return $this->hasMany(Donation::class);
+    }
+    public function InKindDonation(){
+        return $this->hasMany(InKindDonation::class);
+    }
 }

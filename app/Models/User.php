@@ -58,4 +58,14 @@ class User extends Authenticatable implements JWTSubject
     public function wallet(){
         return $this->hasOne(wallet::class);
     }
+    public function Donation(){
+        return $this->hasMany(Donation::class);
+    }
+    public function InKindDonation(){
+        return $this->hasMany(InKindDonation::class);
+    }
+    public function RecurringDonation(){
+        return $this->hasMany(RecurringDonation::class);
+    }
 }
+

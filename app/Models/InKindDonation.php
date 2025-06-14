@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class VolunteerOppotunity extends Model
+class InKindDonation extends Model
 {
-    /** @use HasFactory<\Database\Factories\VolunteerOppotunityFactory> */
+    /** @use HasFactory<\Database\Factories\InKindDonationFactory> */
     use HasFactory;
 }
