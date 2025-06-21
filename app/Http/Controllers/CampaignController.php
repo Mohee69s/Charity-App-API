@@ -16,15 +16,12 @@ class CampaignController extends Controller
             'campaigns' => $camps
         ]);
     }
-    public function camp(Request $request){
-        $request->validate([
-            'campaign_id'=>'required|exists:campaigns,id'
-        ]);
-        $camp=Campaign::where('campaign_id',$request->campaign_id)->first();
+    public function camp($status){
+        $camp=Campaign::where('campaign_id',$status)->first();
         return response()->json([
             'campaign'=>$camp
         ]);
     }
-    
-    
+
+
 }

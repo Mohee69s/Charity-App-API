@@ -21,8 +21,9 @@ return new class extends Migration
             $table->dateTime('end_date');
             $table->enum('status',['draft','active','completed','cancelled']);
             $table->text('description');
-            $table->boolean('needs_volunteers');
-            $table->boolean('needs_donations');
+            $table->boolean('needs_volunteers')->nullable();
+            $table->boolean('needs_donations')->nullable();
+            $table->boolean('needs_inKindDonations')->nullable();
             $table->timestamp('created_at');
             $table->timestamp('updated_at');
         });

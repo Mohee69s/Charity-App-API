@@ -79,37 +79,5 @@ class DonationController extends Controller
         ]);
 
     }
-    public function donate(Request $request){
-        $request->validate([
-            'amount'=>'numeric|required',
-            'donation_date'=>'required|date',
-            'wallet_pin'=>'required'
-        ]);
-        $wallet=wallet::where('user_id',auth()->user()->id);
-        if($wallet->wallet_pin != $request->wallet_pin){
-            return response()->json([
-                'message' => 'wrong wallet pin'
-            ]);
-        }
-        if($wallet->balance < $request->amount){
-            $wallet->balance-=$wallet->wallet_pin;
-            $wallet->save();
-            Donation::create([
-                'user_id'=>auth()->user()->id,
-                'amount'=>$request->amount,
-            ]);
-            WalletTransaction::create([
-                'wallet_id'=>$wallet->id,
-                'type'=>'donation',
-                'amount'=>$request->amount,
-            ])->save();
-            return response()->json([
-                'message'=>'donation made successfully',
-                'name'=>auth()->user()->name,
-                'amount'=>$request->amount,
-                'date'=>Carbon::now()
-            ]);
-        }
-    }
 
 }

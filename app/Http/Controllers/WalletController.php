@@ -44,8 +44,10 @@ class WalletController extends Controller
     public function update(Request $request){
         $request -> validate([
             'wallet_pin' => 'required',
-            'amount'=> 'required'
+            'amount'=> 'required',
+            'method' =>' required'
         ]);
+        $method = $request->method;
         $wallet = wallet::where('user_id',$request->user()->id)->first();
         if($request -> wallet_pin != $wallet->wallet_pin){
             return response()->json([
@@ -66,9 +68,12 @@ class WalletController extends Controller
 
         
         return response()->json([
-            'message' => 'balance updated successfully',
-            'balance' => $wallet->balance
-        ]) ;
+            'from' => auth()->user()->name,
+            'to' => 'My charity wallet',
+            'amount'=>$request->amount,
+            'method' => $request->method,
+            'time'=>Carbon::now(),
+        ]);
     }  
     
 }

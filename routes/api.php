@@ -17,7 +17,7 @@ Route::post('/register',[RegisterController::class,"register"]);
 Route::middleware(['auth:api'])->group(function () {
 
     Route::get('/logout',[AuthController::class,'destroy']);
-   
+
     //Wallet Routes
     Route::post('/wallet/create',[WalletController::class,'store']);
     Route::post('/wallet',[WalletController::class,'index']);
@@ -26,13 +26,22 @@ Route::middleware(['auth:api'])->group(function () {
 
     //Campaigns Routes
     Route::get('/campaigns',[CampaignController::class,'index']);
-    Route::get('/campaigns',[CampaignController::class,'camp']);
+    Route::get('/campaigns/{id}',[CampaignController::class,'camp']);
 
     //Donations Routes
     Route::get('/donate',[DonationController::class,'index']);
     Route::post('/donate',[DonationController::class,'store']);
-    Route::post('/rec',[RecurringDonationsController::class,'store']);
-    Route::get('/inkind',[InKindDonationsController::class,'index']);
-    
-    
+
+    // Recurring Donations
+    Route::get('/recurring/{status}',[RecurringDonationsController::class,'index']);
+    Route::post('/recurring',[RecurringDonationsController::class,'store']);
+    Route::patch('/recurring',[RecurringDonationsController::class,'destroy']);
+
+    // In kind donations
+    Route::get('/inkind/{status}',[InKindDonationsController::class,'index']);
+    Route::post('/inkind',[InKindDonationsController::class,'store']);
+    Route::post('/inkind/camp',[InKindDonationsController::class,'storeforcamp']);
+
+
+
 });

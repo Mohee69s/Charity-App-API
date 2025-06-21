@@ -5,18 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\RecurringDonation;
 use App\Models\wallet;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 class RecurringDonationsController extends Controller
 {
-    public function index(){
+    public function index($status=true): JsonResponse
+    {
         $user_id = auth()->user()->id;
-        $rec=RecurringDonation::where('user_id',$user_id)->get();
+        $rec=RecurringDonation::where('user_id',$user_id)->where('status',$status)->get();
         return response()->json([
             'recurring_donations'=>$rec
         ]);
     }
-    public function store(Request $request){
+    public function store(Request $request): JsonResponse
+    {
         $request->validate([
             'amount'=>'required|numeric',
             'period'=>'required|in:daily,weekly,monthly,yearly',
@@ -26,7 +29,7 @@ class RecurringDonationsController extends Controller
             'reminder_notification'=>'required|in:one_day_before,when_the_time_comes'
         ]);
         $user_id=auth()->user()->id;
-        $wallet=wallet::where('user_id',$user_id)->first();
+//        $wallet=wallet::where('user_id',$user_id)->first();
         $req_date = Carbon::parse($request->start_date);
         if ($req_date->idToday()||$req_date->isPast()){
             return response()->json([
@@ -60,12 +63,13 @@ class RecurringDonationsController extends Controller
             'payment_id'=> $donrec->id
         ]);
     }
-    public function destroy(Request $request){
+    public function destroy(Request $request): JsonResponse
+    {
         $user_id=auth()->user()->id;
         $request->validate([
             'id'=>'required'
         ]);
-        $rec=RecurringDonation('id',$request->id);
+        $rec=RecurringDonation('id',$user_id);
         $rec->update(['is_active'=>false]);
         $total = $rec->run_count * $rec->amount;
         return response()->json([
