@@ -11,37 +11,39 @@ use App\Http\Controllers\WalletTransactionsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login',[AuthController::class,"login"]);
-Route::post('/register',[RegisterController::class,"register"]);
+Route::post('/login', [AuthController::class, "login"]);
+Route::post('/register', [RegisterController::class, "register"]);
 
+Route::get('test', function () {
+    return response()->json([
+        'message' => 'noice from nvim'
+    ]);
+});
 Route::middleware(['auth:api'])->group(function () {
 
-    Route::get('/logout',[AuthController::class,'destroy']);
+    Route::get('/logout', [AuthController::class, 'destroy']);
 
     //Wallet Routes
-    Route::post('/wallet/create',[WalletController::class,'store']);
-    Route::post('/wallet',[WalletController::class,'index']);
-    Route::patch('/wallet/pay',[WalletController::class,'update']);
-    Route::get('/wallet/transactions',[WalletTransactionsController::class,'index']);
+    Route::post('/wallet/create', [WalletController::class, 'store']);
+    Route::post('/wallet', [WalletController::class, 'index']);
+    Route::patch('/wallet/pay', [WalletController::class, 'update']);
+    Route::get('/wallet/transactions', [WalletTransactionsController::class, 'index']);
 
     //Campaigns Routes
-    Route::get('/campaigns',[CampaignController::class,'index']);
-    Route::get('/campaigns/{id}',[CampaignController::class,'camp']);
+    Route::get('/campaigns', [CampaignController::class, 'index']);
+    Route::get('/campaigns/{id}', [CampaignController::class, 'camp']);
 
     //Donations Routes
-    Route::get('/donate',[DonationController::class,'index']);
-    Route::post('/donate',[DonationController::class,'store']);
+    Route::get('/donate', [DonationController::class, 'index']);
+    Route::post('/donate', [DonationController::class, 'store']);
 
     // Recurring Donations
-    Route::get('/recurring/{status}',[RecurringDonationsController::class,'index']);
-    Route::post('/recurring',[RecurringDonationsController::class,'store']);
-    Route::patch('/recurring',[RecurringDonationsController::class,'destroy']);
+    Route::get('/recurring/{status}', [RecurringDonationsController::class, 'index']);
+    Route::post('/recurring', [RecurringDonationsController::class, 'store']);
+    Route::patch('/recurring', [RecurringDonationsController::class, 'destroy']);
 
     // In kind donations
-    Route::get('/inkind/{status}',[InKindDonationsController::class,'index']);
-    Route::post('/inkind',[InKindDonationsController::class,'store']);
-    Route::post('/inkind/camp',[InKindDonationsController::class,'storeforcamp']);
-
-
-
+    Route::get('/inkind/{status}', [InKindDonationsController::class, 'index']);
+    Route::post('/inkind', [InKindDonationsController::class, 'store']);
+    Route::post('/inkind/camp', [InKindDonationsController::class, 'storeforcamp']);
 });
