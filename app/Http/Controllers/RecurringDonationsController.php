@@ -65,11 +65,13 @@ class RecurringDonationsController extends Controller
     }
     public function destroy(Request $request): JsonResponse
     {
-        $user_id=auth()->user()->id;
         $request->validate([
             'id'=>'required'
         ]);
-        $rec=RecurringDonation('id',$user_id);
+        $rec=RecurringDonation::where('id',$request->id)->first();
+        if ($rec->user_id != auth()->user()->id){
+            return response()->json(['message'=>'you are not authorized to view this record']);
+        }
         $rec->update(['is_active'=>false]);
         $total = $rec->run_count * $rec->amount;
         return response()->json([
