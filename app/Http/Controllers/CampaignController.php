@@ -20,9 +20,12 @@ class CampaignController extends Controller
         ]);
     }
     public function volunteer(Request $request){
-        $camp=Campaign::where('needs_volunteers',true)->with('CampaignMedia')->get();
+        $camps=Campaign::where('needs_volunteers',true)->with('CampaignMedia')->get();
+        if ($request -> query('type')){
+           $camps=$camps->where('type',$request->query('type'));
+        }
         return response()->json([
-            'campaigns' => $camp
+            'campaigns' => $camps
         ]);
     }
     public function camp($id){
