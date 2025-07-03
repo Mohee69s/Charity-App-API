@@ -30,8 +30,12 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/wallet/transactions', [WalletTransactionsController::class, 'index']);
 
     //Campaigns Routes
-    Route::get('/campaigns', [CampaignController::class, 'index']);
+    Route::get('/campaigns/donations', [CampaignController::class, 'donation']);
+    Route::get('/campaigns/volunteering',[CampaignController::class,'volunteer']);
+
+
     Route::get('/campaigns/{id}', [CampaignController::class, 'camp']);
+
 
     //Donations Routes
     Route::get('/donate', [DonationController::class, 'index']);

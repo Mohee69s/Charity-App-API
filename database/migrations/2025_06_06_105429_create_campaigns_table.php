@@ -20,6 +20,7 @@ return new class extends Migration
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->enum('status',['draft','active','completed','cancelled']);
+            $table->enum('type',['health','education']);
             $table->text('description');
             $table->boolean('needs_volunteers')->nullable();
             $table->boolean('needs_donations')->nullable();

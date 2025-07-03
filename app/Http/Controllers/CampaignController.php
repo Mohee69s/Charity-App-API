@@ -10,14 +10,23 @@ use Illuminate\Http\Request;
 
 class CampaignController extends Controller
 {
-    public function index(Request $request){
-        $camps=Campaign::with('CampaignMedia')->get();
+    public function donation(Request $request){
+        $camps=Campaign::where('needs_donations',true)->orWhere('needs_inKindDonations',true)->with('CampaignMedia')->get();
+        if ($request -> query('type')){
+           $camps=$camps->where('type',$request->query('type'));
+        }
         return response()->json([
             'campaigns' => $camps
         ]);
     }
-    public function camp($status){
-        $camp=Campaign::where('campaign_id',$status)->first();
+    public function volunteer(Request $request){
+        $camp=Campaign::where('needs_volunteers',true)->with('CampaignMedia')->get();
+        return response()->json([
+            'campaigns' => $camp
+        ]);
+    }
+    public function camp($id){
+        $camp=Campaign::where('campaign_id',$id)->with('CampaignMedia')->first();
         return response()->json([
             'campaign'=>$camp
         ]);
