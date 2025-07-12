@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('volunteer_applications', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::create('user_roles', function (Blueprint $table) {
+            $table->integer('user_id')->index('idx_87b8888186ca9769c960e92687');
+            $table->integer('role_id')->index('idx_b23c65e50a758245a33ee35fda');
+
+            $table->primary(['user_id', 'role_id']);
         });
     }
 
@@ -22,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('volunteer_applications');
+        Schema::dropIfExists('user_roles');
     }
 };

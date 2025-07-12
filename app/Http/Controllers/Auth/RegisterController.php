@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Hash;
 
 class RegisterController extends Controller
 {
@@ -19,7 +20,7 @@ class RegisterController extends Controller
     public function register(Request $request): JsonResponse
     {
         $request->validate([
-            'name'=>['required,string'],
+            'name'=>['required','string'],
             'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'min:8'],
             'phone'=>'required',
@@ -27,11 +28,11 @@ class RegisterController extends Controller
         ]);
 
         $user = User::create([
-            'name'=>$request->name,
+            'full_name'=>$request->name,
             'email' => $request->email,
-            'phone' => $request-> phone,
-            'password'=> $request->password,
-            'birth date'=>$request->birth_date
+            'phone_number' => $request-> phone,
+            'password_hash' => Hash::make($request->password),
+            'birth_date'=>$request->birth_date
         ]);
 
         event(new Registered($user));

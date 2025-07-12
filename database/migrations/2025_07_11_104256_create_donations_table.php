@@ -1,10 +1,8 @@
 <?php
 
-use App\Models\Campaign;
-use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -15,13 +13,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('donations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignIdFor(User::class);
-            $table->foreignIdFor(Campaign::class)->nullable();
-            $table->bigInteger('amount')->nullable();
-            $table->timestamp('donation_date')->default(Carbon::now());
-            $table->boolean('recurring')->default(false);
-            $table->timestamps();
+            $table->increments('id');
+            $table->decimal('amount');
+            $table->timestamp('donation_date')->nullable()->default(DB::raw("now()"));
+            $table->boolean('recurring')->nullable();
+            $table->integer('campaign_id')->nullable();
+            $table->integer('user_id')->nullable();
+
+            $table->unique(['id'], 'donations_pkey');
         });
     }
 
