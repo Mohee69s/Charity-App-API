@@ -60,8 +60,8 @@ class ProcessRecurringDonations implements ShouldQueue
                 $recurring->save();
             }
             else{
-                //TODO add a condition for no enough balance
                 $recurring->update(['is_active'=>false]);
+                //TODO Notify User
 
             }
 

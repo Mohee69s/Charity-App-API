@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Donation;
+use App\Models\wallet;
+use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
-use app\Models\WalletTransaction;
-use app\Models\wallet;
-use app\Models\Campaign;
 use Carbon\Carbon;
 class DonationController extends Controller
 {
@@ -19,65 +18,45 @@ class DonationController extends Controller
     }
     public function store(Request $request){
         $request->validate([
-            'amount'=>'required|numeric',
-            'wallet_pin'=>'required',
-            'campaign_id'=>'required|exists:campaigns,id'
+            'wallet_pin'=>'required|numeric',
+            'amount'=>'required|numeric'
         ]);
-
-        $user = auth();
-        $wallet = wallet::where('user_id',$user->id());
-        $camp=Campaign::where('campaign_id',$request->campaign_id);
-        if($camp->status != 'active'){
+        $wallet=wallet::where('user_id',auth()->user()->id)->first();
+        if ($wallet->wallet_pin != $request->wallet_pin){
             return response()->json([
-                'message'=>"the requested camp is in phase {$camp->status}, you can\'t make donations"
+                'message'=> 'Invalid PIN'
             ]);
         }
-        if($camp->achieved >= $camp->goal){
+        if ($wallet->balance < $request->amount){
             return response()->json([
-                'message'=>'the goal has been achieved'
+                'message'=>'No enough balance'
             ]);
         }
-        if(!$camp->needs_donations){
-            return response()->json([
-                'message' => 'the campaign doesn\'t need donations'
-            ]);
-        }
-        if ($wallet->wallet_pin === $request->wallet_pin){
-            if($wallet->balance >= $request->amount){
-                $wallet->balance -=$request->amount;
-                $wallet->save();
-                $camp->achieved+=$request->amount;
-                $camp->save();
-                Donation::create([
-                    'user_id'=>auth()->user()->id,
-                    'campaign_id'=>$camp->id,
-                    'amount'=>$request->amount
-                ])->save();
-                WalletTransaction::create([
-                    'wallet_id'=>$wallet->id,
-                    'type'=>'donation',
-                    'amount'=>$request->amount,
-                    'campaign_id'=>$camp->id,
-                ])->save();
-                return response()->json([
+        $wallet->balance -=$request->amount;
+        $wallet->save();
+        
+        Donation::create([
+            'amount'=>$request->amount,
+            'donation_date'=>Carbon::now(),
+            'recurring'=>false,
+            'campaign_id'=>null,
+            'user_id'=>auth()->user()->id
+        ])->save();
+        WalletTransaction::create([
+            'type'=>'donation',
+            'amount'=>$request->amount,
+            'reference_id'=>null,
+            'wallet_id'=>$wallet->id
+        ])->save();
+        return response()->json([
                     'message'=>'Donation Completed',
-                    'from'=>$user->user()->name,
-                    'to'=>$camp->name,
+                    'from'=>auth()->user()->full_name,
+                    'to'=>'General charity',
                     'amount'=>$request->amount,
                     'payment method'=>'Donation wallet',
                     'time'=>Carbon::now()
 
                 ]);
-            }else{
-                return response()->json([
-                    'message' => 'no enough balance'
-                ]);
-            }
-        }
-        return response()->json([
-            'message' => 'wrong pin'
-        ]);
-
     }
 
 }

@@ -67,5 +67,11 @@ class User extends Authenticatable implements JWTSubject
     public function RecurringDonation(){
         return $this->hasMany(RecurringDonation::class);
     }
+
+    public function getAuthPassword()
+{
+    return $this->password_hash;
+}
+
 }
 

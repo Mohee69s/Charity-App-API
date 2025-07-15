@@ -15,5 +15,6 @@ class Donation extends Model
     public function Campaign(){
         return $this->belongsTo(Campaign::class);
     }
-    
+    public const UPDATED_AT = null;
+    public const CREATED_AT = null;
 }

@@ -35,6 +35,7 @@ Route::middleware(['auth:api'])->group(function () {
 
 
     Route::get('/campaigns/{id}', [CampaignController::class, 'camp']);
+    Route::post('campaigns/{id}/donate',[CampaignController::class,'donate']);
 
 
     //Donations Routes

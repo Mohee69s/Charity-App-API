@@ -15,4 +15,6 @@ class WalletTransaction extends Model
     public function campaign (){
         return $this->belongsTo(Campaign::class);
     }
+    public const UPDATED_AT = null;
+
 }
