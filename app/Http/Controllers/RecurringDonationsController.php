@@ -10,11 +10,11 @@ use Illuminate\Http\Request;
 use InvalidArgumentException;
 class RecurringDonationsController extends Controller
 {
-    public function index($status=true): JsonResponse
+    public function index(): JsonResponse
     {
         $user_id = auth()->user()->id;
-        $rec=RecurringDonation::where('user_id',$user_id)->where('status',$status)->get();
-        return response()->json([
+        $rec=RecurringDonation::where('user_id',$user_id)->get();
+    return response()->json([
             'recurring_donations'=>$rec
         ]);
     }
@@ -31,7 +31,7 @@ class RecurringDonationsController extends Controller
         $user_id=auth()->user()->id;
 //        $wallet=wallet::where('user_id',$user_id)->first();
         $req_date = Carbon::parse($request->start_date);
-        if ($req_date->idToday()||$req_date->isPast()){
+        if ($req_date->isToday()||$req_date->isPast()){
             return response()->json([
                 'message'=>'the starting date must be in the future'
             ]);
@@ -45,30 +45,27 @@ class RecurringDonationsController extends Controller
             'yearly'=> $start->copy()->addYear(),
             default => throw new InvalidArgumentException("Invalid period: $period")
         };
-        $donrec=RecurringDonation::create([
+        RecurringDonation::create([
             'user_id'=>$user_id,
             'type'=>$request->type,
             'amount'=>$request->amount,
             'period'=>$request->period,
             'start_date'=>$request->start_date,
-            'next_run'=> $nextdate
+            'next_run'=> $nextdate,
+            'is_active'=>true
         ])->save();
         return response()->json([
-            'from' =>auth()->user()->name,
+            'from' =>auth()->user()->full_name,
             'to' => "{$request->type} campaigns",
             'amount'=>$request->amount,
             'payment_method' => 'Donation wallet',
             'time' => Carbon::now(),
             'type_of_repetition' => $request->period,
-            'payment_id'=> $donrec->id
         ]);
     }
-    public function destroy(Request $request): JsonResponse
+    public function destroy($id): JsonResponse
     {
-        $request->validate([
-            'id'=>'required'
-        ]);
-        $rec=RecurringDonation::where('id',$request->id)->first();
+        $rec=RecurringDonation::where('id',$id)->first();
         if ($rec->user_id != auth()->user()->id){
             return response()->json(['message'=>'you are not authorized to view this record']);
         }

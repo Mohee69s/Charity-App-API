@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('campaigns', function (Blueprint $table) {
-            //TODO remove nullable
-            $table->enum('type',['health','education','emergency'])->nullable();
+        Schema::table('in_kind', function (Blueprint $table) {
+            $table->foreign(['campaign_id'], 'FK_65879f53bd2cde205fd7c99c423')->references(['id'])->on('campaigns')->onUpdate('no action')->onDelete('no action');
         });
     }
 
@@ -22,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('campaigns', function (Blueprint $table) {
-            //
+        Schema::table('in_kind', function (Blueprint $table) {
+            $table->dropForeign('FK_65879f53bd2cde205fd7c99c423');
         });
     }
 };

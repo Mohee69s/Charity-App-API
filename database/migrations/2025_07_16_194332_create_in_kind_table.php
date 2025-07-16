@@ -12,19 +12,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('in_kind_donations', function (Blueprint $table) {
+        Schema::create('in_kind', function (Blueprint $table) {
             $table->increments('id');
-            $table->text('name')->nullable();
-            $table->text('description');
-            $table->boolean('approved')->nullable()->default(false);
+            $table->string('name');
+            $table->decimal('goal');
+            $table->decimal('cost')->nullable()->default(0);
+            $table->string('description')->nullable();
             $table->timestamp('created_at')->nullable()->default(DB::raw("now()"));
             $table->timestamp('updated_at')->nullable()->default(DB::raw("now()"));
             $table->integer('campaign_id')->nullable();
-            $table->integer('user_id')->nullable();
 
-            $table->unique(['id'], 'in_kind_donations_pkey');
+            $table->unique(['id'], 'in_kind_pkey');
         });
-        DB::statement("alter table \"in_kind_donations\" add column \"status\" in_kind_donations_status_enum null default 'pending'");
     }
 
     /**
@@ -32,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('in_kind_donations');
+        Schema::dropIfExists('in_kind');
     }
 };

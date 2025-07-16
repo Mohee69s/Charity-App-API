@@ -12,4 +12,5 @@ class RecurringDonation extends Model
     public function User(){
         return $this->belongsTo(User::class);
     }
+    public const UPDATED_AT = null;
 }

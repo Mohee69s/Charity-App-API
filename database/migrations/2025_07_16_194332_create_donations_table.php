@@ -20,7 +20,6 @@ return new class extends Migration
             $table->integer('campaign_id')->nullable();
             $table->integer('user_id')->nullable();
 
-            
             $table->unique(['id'], 'donations_pkey');
         });
     }

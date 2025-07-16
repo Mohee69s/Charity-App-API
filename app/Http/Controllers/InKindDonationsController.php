@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Campaign;
+use App\Models\InKind;
 use App\Models\InKindDonation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,42 +11,55 @@ use Illuminate\Http\Request;
 
 class InKindDonationsController extends Controller
 {
-    public function index($status = 'approved'): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $id=auth()->user()->id;
-        $don=InKindDonation::where('user_id',$id)->where('status',$status)->get();
+        $id = auth()->user()->id;
+        $don = InKindDonation::where('user_id', $id)->with('InKind')->with('campaign')->get();
+        if ($request -> query('status')){
+            $don = $don->where('status',$request->query('status'));
+        }
         return response()->json([
-            'inkinddonations'=>$don
+            'inkinddonations' => $don
         ]);
     }
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, $id): JsonResponse
     {
         $request->validate([
-            'user_id'=>'required',
-            'campaign_id'=>'required|exists:campaigns,id',
-            'name'=>'required',
-            'description'=>'required'
+            'name' => 'required',
+            'quantity' => 'required|numeric',
+            'description' => 'string'
         ]);
-        $camp = Campaign::where('id',$request->campaign_id)->first();
-        if (!$camp->needs_inKindDonations){
+        $des = null;
+        if ($request->description) {
+            $des = $request->description;
+        }
+
+        $camp = Campaign::where('id', $id)->first();
+        if (!$camp->need_in_kind_donations) {
             return response()->json([
-                'message' => "the campaign {$camp->name} Doesn't need in-kind donations}"
+                'message' => 'this Campaign doesn\'t need in kind donations'
+            ]);
+        }
+        $inkind = InKind::where('campaign_id',$id)->where('name',$request->name)->first();
+        if ($inkind->goal <= $inkind->cost){
+            return response()->json([
+                'message'=>'this campaign doesn\'t need {$inkind->name} anymore'
             ]);
         }
         InKindDonation::create([
+            'status' => 'pending',
+            'approved' => false,
+            'in_kind_id'=> $inkind->id,
+            'campaign_id'=>$camp->id,
             'user_id'=>auth()->user()->id,
-            'campaign_id'=>$request->campaign_id,
-            'name'=>$request->name,
-            'description'=>$request->description
+            //TODO check if description is required in the system
+            'description'=> 'null'
         ])->save();
-        $camp = Campaign::where('id',$request->campaign_id)->first();
         return response()->json([
-            'message'=>'donation made',
-            'User name' => auth()->user()->name,
-            'campaign' => $camp->name,
-            'donation'=>$request->name,
-            'description' =>$request->description
+            'message'=> 'donation made, wait for approval'
         ]);
+
+        
 
     }
 }

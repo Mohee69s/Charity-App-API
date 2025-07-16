@@ -45,10 +45,9 @@ Route::middleware(['auth:api'])->group(function () {
     // Recurring Donations
     Route::get('/recurring/{status}', [RecurringDonationsController::class, 'index']);
     Route::post('/recurring', [RecurringDonationsController::class, 'store']);
-    Route::patch('/recurring', [RecurringDonationsController::class, 'destroy']);
+    Route::patch('/recurring/{id}', [RecurringDonationsController::class, 'destroy']);
 
     // In kind donations
-    Route::get('/inkind/{status}', [InKindDonationsController::class, 'index']);
-    Route::post('/inkind', [InKindDonationsController::class, 'store']);
-    Route::post('/inkind/camp', [InKindDonationsController::class, 'storeforcamp']);
+    Route::get('/inkind', [InKindDonationsController::class, 'index']);
+    Route::post('/inkind/{id}', [InKindDonationsController::class, 'store']);
 });
