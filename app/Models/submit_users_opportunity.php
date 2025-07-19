@@ -9,4 +9,7 @@ class submit_users_opportunity extends Model
 {
     /** @use HasFactory<\Database\Factories\SubmitUsersOpportunityFactory> */
     use HasFactory;
+    public function opportunity(){
+        return $this->belongsTo(VolunteerOpportunities::class);
+    }
 }

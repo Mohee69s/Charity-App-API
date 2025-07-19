@@ -5,8 +5,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Campaign;
+use App\Models\CampaignVoulnteers;
 use App\Models\Donation;
 use App\Models\submit_users_opportunity;
+use App\Models\VolunteerOpportunities;
 use App\Models\wallet;
 use App\Models\WalletTransaction;
 use Carbon\Carbon;
@@ -17,7 +19,7 @@ class CampaignController extends Controller
     // This is for returning donations campaigns
     public function donation(Request $request)
     {
-        $camps = Campaign::where('need_donations', true)->orWhere('need_in_kind_donations', true)->with('CampaignMedia')->get();
+        $camps = Campaign::where('status', 'active')->orWhere('status', '')->where('need_donations', true)->orWhere('need_in_kind_donations', true)->with('CampaignMedia')->get();
         if ($request->query('type')) {
             $camps = $camps->where('type', $request->query('type'));
         }
@@ -60,7 +62,7 @@ class CampaignController extends Controller
         $camp = Campaign::where('id', $id)->with('CampaignMedia')->with('VolunteerOpportunities')->first();
         return response()->json([
             $camp,
-            'can cancel'=>true
+            'can cancel' => true
         ]);
     }
 
@@ -148,14 +150,28 @@ class CampaignController extends Controller
                 'message' => 'this camp doesn\'t need volunteers'
             ]);
         }
-
+        $opp = VolunteerOpportunities::where('campaign_id', $id)->first();
+        if (!$opp->need_volunteers) {
+            return response()->json([
+                'message' => 'this campaign doesn\'t need volunteers'
+            ]);
+        }
+        $test = submit_users_opportunity::where('user_id', $user->id)->where('opportunity_id', $opp->id)->first();
+        if ($test) {
+            return response()->json([
+                'message' => 'you\'re already volunteered here'
+            ]);
+        }
         submit_users_opportunity::create([
             'user_id' => $user->id,
-            'campaign_id' => $camp->id,
-            'status' => 'pending'
+            'opportunity_id' => $opp->id,
+            'approved' => false,
+            'status' => 'pending',
+            'submitted_at' => now(),
         ])->save();
         return response()->json([
             'message' => 'done, wait for approval'
         ]);
     }
+    
 }

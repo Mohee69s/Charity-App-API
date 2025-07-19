@@ -12,4 +12,7 @@ class VolunteerOpportunities extends Model
     public function campaign(){
         return $this->belongsTo(Campaign::class);
     }
+    public function submit(){
+        return $this->hasMany(submit_users_opportunity::class);
+    }
 }

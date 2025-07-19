@@ -9,4 +9,8 @@ class CampaignVoulnteers extends Model
 {
     /** @use HasFactory<\Database\Factories\CampaignVoulnteersFactory> */
     use HasFactory;
+    protected $table = 'campaign_volunteers';
+    public function campaign(){
+        return $this->belongsTo(Campaign::class,'campaignId');
+    }
 }

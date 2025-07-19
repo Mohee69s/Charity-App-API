@@ -6,6 +6,7 @@ use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\InKindDonationsController;
 use App\Http\Controllers\RecurringDonationsController;
+use App\Http\Controllers\VolunteeringController;
 use App\Http\Controllers\VolunteerOpportunitiesController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WalletTransactionsController;
@@ -54,6 +55,10 @@ Route::middleware(['auth:api'])->group(function () {
 
     //Voulunteering routes
     Route::get('/opportunity/{id}', [VolunteerOpportunitiesController::class, 'index']);
-    Route::post('volunteer/{id}', [CampaignController::class, 'volunteerforcampaign']);
     Route::get('/volunteer/{id}', [CampaignController::class, 'camp']);
+    Route::post('volunteer/{id}', [CampaignController::class, 'volunteerforcampaign']);
+    
+
+    Route::get('/volunteerlog',[VolunteeringController::class,'index']);
+    Route::patch('/volunteeringcancel',[VolunteeringController::class,'cancelVol']);
 });

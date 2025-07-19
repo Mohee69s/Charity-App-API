@@ -29,4 +29,9 @@ class Campaign extends Model
     {
         return $this->hasOne(VolunteerOpportunities::class);
     }
+    public function campaignvolunteers()
+    {
+        return $this->hasMany(CampaignVoulnteers::class);
+
+    }
 }

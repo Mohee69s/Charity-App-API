@@ -21,6 +21,7 @@ return new class extends Migration
             $table->primary(['user_id', 'opportunity_id']);
             $table->unique(['opportunity_id', 'user_id'], 'submit_users_opportunities_pkey');
         });
+        DB::statement("alter table \"submit_users_opportunities\" add column \"status\" assistance_requests_status_enum null default 'pending'");
     }
 
     /**

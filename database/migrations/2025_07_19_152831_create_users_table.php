@@ -20,10 +20,10 @@ return new class extends Migration
             $table->string('phone_number')->nullable();
             $table->string('address')->nullable();
             $table->boolean('has_wallet')->nullable();
-            $table->timestamp('created_at')->nullable()->default(DB::raw("now()"));
-            $table->timestamp('updated_at')->nullable()->default(DB::raw("now()"));
             $table->boolean('is_volunteer')->nullable();
             $table->date('birth_date')->nullable();
+            $table->timestamp('created_at')->nullable()->default(DB::raw("now()"));
+            $table->timestamp('updated_at')->nullable()->default(DB::raw("now()"));
 
             $table->unique(['email'], 'users_email_key');
             $table->unique(['id'], 'users_pkey');
