@@ -12,16 +12,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('volunteer_opportunities', function (Blueprint $table) {
+        Schema::create('donations', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('title');
-            $table->text('tasks')->nullable();
-            $table->string('duration')->nullable();
-            $table->string('location')->nullable();
-            $table->timestamp('created_at')->nullable()->default(DB::raw("now()"));
+            $table->decimal('amount');
+            $table->timestamp('donation_date')->nullable()->default(DB::raw("now()"));
+            $table->boolean('recurring')->nullable();
             $table->integer('campaign_id')->nullable();
+            $table->integer('user_id')->nullable();
 
-            $table->unique(['id'], 'volunteer_opportunities_pkey');
+            
+            $table->unique(['id'], 'donations_pkey');
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('volunteer_opportunities');
+        Schema::dropIfExists('donations');
     }
 };

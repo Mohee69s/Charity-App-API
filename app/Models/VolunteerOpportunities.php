@@ -9,4 +9,7 @@ class VolunteerOpportunities extends Model
 {
     /** @use HasFactory<\Database\Factories\VolunteerOpportunitiesFactory> */
     use HasFactory;
+    public function campaign(){
+        return $this->belongsTo(Campaign::class);
+    }
 }

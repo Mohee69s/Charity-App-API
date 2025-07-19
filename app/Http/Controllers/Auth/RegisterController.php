@@ -32,7 +32,8 @@ class RegisterController extends Controller
             'email' => $request->email,
             'phone_number' => $request-> phone,
             'password_hash' => Hash::make($request->password),
-            'birth_date'=>$request->birth_date
+            'birth_date'=>$request->birth_date,
+            'is_volunteer' => false
         ]);
 
         event(new Registered($user));

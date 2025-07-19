@@ -11,6 +11,11 @@ class WalletController extends Controller
 {
     public function store(Request $request)
     {
+        if (auth()->user()->wallet){
+            return response()->json([
+                'message'=>'you have a wallet, you can not create another one'
+            ]);
+        }
         $request->validate([
             "wallet_pin" => 'required|min:4|max:5'
         ]);

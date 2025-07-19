@@ -6,6 +6,7 @@ use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\InKindDonationsController;
 use App\Http\Controllers\RecurringDonationsController;
+use App\Http\Controllers\VolunteerOpportunitiesController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WalletTransactionsController;
 use Illuminate\Http\Request;
@@ -31,11 +32,11 @@ Route::middleware(['auth:api'])->group(function () {
 
     //Campaigns Routes
     Route::get('/campaigns/donations', [CampaignController::class, 'donation']);
-    Route::get('/campaigns/volunteering',[CampaignController::class,'volunteer']);
+    Route::get('/campaigns/volunteering', [CampaignController::class, 'volunteer']);
 
 
     Route::get('/campaigns/{id}', [CampaignController::class, 'camp']);
-    Route::post('campaigns/{id}/donate',[CampaignController::class,'donate']);
+    Route::post('campaigns/{id}/donate', [CampaignController::class, 'donate']);
 
 
     //Donations Routes
@@ -43,11 +44,16 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/donate', [DonationController::class, 'store']);
 
     // Recurring Donations
-    Route::get('/recurring/{status}', [RecurringDonationsController::class, 'index']);
+    Route::get('/recurring', [RecurringDonationsController::class, 'index']);
     Route::post('/recurring', [RecurringDonationsController::class, 'store']);
     Route::patch('/recurring/{id}', [RecurringDonationsController::class, 'destroy']);
 
     // In kind donations
     Route::get('/inkind', [InKindDonationsController::class, 'index']);
     Route::post('/inkind/{id}', [InKindDonationsController::class, 'store']);
+
+    //Voulunteering routes
+    Route::get('/opportunity/{id}', [VolunteerOpportunitiesController::class, 'index']);
+    Route::post('volunteer/{id}', [CampaignController::class, 'volunteerforcampaign']);
+    Route::get('/volunteer/{id}', [CampaignController::class, 'camp']);
 });
