@@ -101,6 +101,9 @@ class VolunteeringController extends Controller
 
         if ($submission && $submission->status === 'pending') {
             $canCancel = true;
+
+            // DELETE submission when cancelling while pending
+            $submission->delete();
         } else {
             $volunteeringStatus = $vol ? $vol->status : null;
 
@@ -132,6 +135,44 @@ class VolunteeringController extends Controller
 
         return response()->json([
             'message' => 'Cancelled successfully.'
+        ]);
+    }
+    public function store($id)
+    {
+        $user = auth()->user();
+        if ($user->is_volunteer) {
+            return response()->json([
+                'message' => 'you are not a volunteer'
+            ]);
+        }
+
+        $camp = Campaign::where('id', $id)->first();
+        if (!$camp->need_volunteers) {
+            return response()->json([
+                'message' => 'this camp doesn\'t need volunteers'
+            ]);
+        }
+        $opp = VolunteerOpportunities::where('campaign_id', $id)->first();
+        if (!$opp->need_volunteers) {
+            return response()->json([
+                'message' => 'this campaign doesn\'t need volunteers'
+            ]);
+        }
+        $test = submit_users_opportunity::where('user_id', $user->id)->where('opportunity_id', $opp->id)->first();
+        if ($test) {
+            return response()->json([
+                'message' => 'you\'re already volunteered here'
+            ]);
+        }
+        submit_users_opportunity::create([
+            'user_id' => $user->id,
+            'opportunity_id' => $opp->id,
+            'approved' => false,
+            'status' => 'pending',
+            'submitted_at' => now(),
+        ])->save();
+        return response()->json([
+            'message' => 'done, wait for approval'
         ]);
     }
 

@@ -13,7 +13,7 @@ class WalletTransaction extends Model
         return $this->belongsTo(wallet::class);
     }
     public function campaign (){
-        return $this->belongsTo(Campaign::class);
+        return $this->belongsTo(Campaign::class,'reference_id');
     }
     public const UPDATED_AT = null;
 

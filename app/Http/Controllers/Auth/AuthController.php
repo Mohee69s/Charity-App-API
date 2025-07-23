@@ -16,6 +16,7 @@ class AuthController extends Controller
             return response()->json(['error'=> 'Invalid credentials'],401);            
         }
         return response()->json([
+            auth()->user(),
             'access_token' => $token,
             'token_type' => 'Bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 3600

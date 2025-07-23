@@ -54,15 +54,22 @@ class CampaignController extends Controller
                 'campaign' => $camp,
             ]);
         }
-        if (!$user->is_volunteered) {
+        if (!$user->is_volunteer) {
             return response()->json([
                 'message' => 'you are not volunteered'
             ]);
         }
-        $camp = Campaign::where('id', $id)->with('CampaignMedia')->with('VolunteerOpportunities')->first();
+        $camp = Campaign::where('id', $id)->with(relations: 'CampaignMedia')->with('VolunteerOpportunities')->first();
+        $opp = VolunteerOpportunities::where('campaign_id', $id)->first();
+        $sub = submit_users_opportunity::where('user_id', $user->id)->where('opportunity_id', $opp->id)->first();
+        if ($sub) {
+            $submitted = true;
+        } else {
+            $submitted = false;
+        }
         return response()->json([
-            $camp,
-            'can cancel' => true
+            'camp' => $camp,
+            'submitted' => $submitted,
         ]);
     }
 
@@ -78,7 +85,6 @@ class CampaignController extends Controller
         $wallet = wallet::where('user_id', $user->id())->first();
 
         $camp = Campaign::where('id', $request->campaign_id)->first();
-        // dd($camp);
         if ($camp->status != 'active') {
             return response()->json([
                 'message' => "the requested camp is in phase {$camp->status}, you can\'t make donations"
@@ -135,43 +141,5 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function volunteerforcampaign($id)
-    {
-        $user = auth()->user();
-        if ($user->is_volunteer) {
-            return response()->json([
-                'message' => 'you are not a volunteer'
-            ]);
-        }
 
-        $camp = Campaign::where('id', $id)->first();
-        if (!$camp->need_volunteers) {
-            return response()->json([
-                'message' => 'this camp doesn\'t need volunteers'
-            ]);
-        }
-        $opp = VolunteerOpportunities::where('campaign_id', $id)->first();
-        if (!$opp->need_volunteers) {
-            return response()->json([
-                'message' => 'this campaign doesn\'t need volunteers'
-            ]);
-        }
-        $test = submit_users_opportunity::where('user_id', $user->id)->where('opportunity_id', $opp->id)->first();
-        if ($test) {
-            return response()->json([
-                'message' => 'you\'re already volunteered here'
-            ]);
-        }
-        submit_users_opportunity::create([
-            'user_id' => $user->id,
-            'opportunity_id' => $opp->id,
-            'approved' => false,
-            'status' => 'pending',
-            'submitted_at' => now(),
-        ])->save();
-        return response()->json([
-            'message' => 'done, wait for approval'
-        ]);
-    }
-    
 }

@@ -55,23 +55,43 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
-    public function wallet(){
+    public function wallet()
+    {
         return $this->hasOne(wallet::class);
     }
-    public function Donation(){
+    public function Donation()
+    {
         return $this->hasMany(Donation::class);
     }
-    public function InKindDonation(){
+    public function InKindDonation()
+    {
         return $this->hasMany(InKindDonation::class);
     }
-    public function RecurringDonation(){
+    public function RecurringDonation()
+    {
         return $this->hasMany(RecurringDonation::class);
     }
 
     public function getAuthPassword()
-{
-    return $this->password_hash;
-}
+    {
+        return $this->password_hash;
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles');
+    }
+
+    public function hasRole($role)
+    {
+        return $this->roles()->where('name', $role)->exists();
+    }
+
+    public function hasAnyRole(array $roles)
+    {
+        return $this->roles()->whereIn('name', $roles)->exists();
+    }
+
 
 }
 

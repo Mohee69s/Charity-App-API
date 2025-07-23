@@ -9,11 +9,13 @@ class wallet extends Model
 {
     /** @use HasFactory<\Database\Factories\WalletFactory> */
     use HasFactory;
-    public function User(){
+    public function User()
+    {
         return $this->belongsTo(User::class);
     }
-    public function WalletTransactions(){
+    public function WalletTransactions()
+    {
         return $this->hasMany(WalletTransaction::class);
     }
-    
+    public const CREATED_AT = null;
 }
