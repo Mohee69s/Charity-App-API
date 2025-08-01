@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\InKindDonationsController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RecurringDonationsController;
 use App\Http\Controllers\VolunteerApplicationsController;
 use App\Http\Controllers\VolunteeringController;
@@ -28,8 +29,10 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/logout', [AuthController::class, 'destroy']);
     Route::get('/campaigns/donations', [CampaignController::class, 'donation']);
     Route::get('/campaigns/{id}', [CampaignController::class, 'camp']);
+    Route::get('/profile', [ProfileController::class,'index']);
+    Route::post('/profile/password', [ProfileController::class,'updatepassword']);
 
-    Route::middleware(['auth', 'role:donator'])->group(function () {
+    
         Route::get('/wallet', [WalletController::class, 'index']);
         Route::patch('/wallet/pay', [WalletController::class, 'update']);
         Route::get('/wallet/transactions', [WalletTransactionsController::class, 'index']);
@@ -45,7 +48,7 @@ Route::middleware(['auth:api'])->group(function () {
         // In kind donations
         Route::get('/inkind', [InKindDonationsController::class, 'index']);
         Route::post('/inkind/{id}', [InKindDonationsController::class, 'store']);
-    });
+    
 
     Route::middleware(['auth', 'role:volunteer'])->group(function () {
         Route::get('/campaigns/volunteering', [CampaignController::class, 'volunteer']);

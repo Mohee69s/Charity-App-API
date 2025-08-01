@@ -17,9 +17,21 @@ class CheckUserRole
     {
         $user = auth()->user();
 
-        if (!$user || !$user->hasAnyRole($roles)) {
+        if (!$user) {
             abort(403, 'Unauthorized');
         }
+
+        $requiredRoles = collect($roles)->filter(fn($r) => !str_starts_with($r, '!'))->toArray();
+        $excludedRoles = collect($roles)->filter(fn($r) => str_starts_with($r, '!'))->map(fn($r) => ltrim($r, '!'))->toArray();
+
+        if ($requiredRoles && !$user->hasAnyRole($requiredRoles)) {
+            abort(403, 'Unauthorized');
+        }
+
+        if ($excludedRoles && $user->hasAnyRole($excludedRoles)) {
+            abort(403, 'Unauthorized');
+        }
+
 
         return $next($request);
     }

@@ -11,7 +11,7 @@ class AuthController extends Controller
     public function login(Request $request){
 
         $credentials = $request -> only('email', 'password');
-        JWTAuth::factory()->setTTL(180);
+        JWTAuth::factory()->setTTL(60*24*30);
         if (!$token = JWTAuth::attempt($credentials) ){
             return response()->json(['error'=> 'Invalid credentials'],401);            
         }
@@ -19,7 +19,7 @@ class AuthController extends Controller
             auth()->user(),
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 3600
+            'expires_in' => auth('api')->factory()->getTTL() * 60*24*30,
         ]);
     }
     public function destroy(Request $request){
