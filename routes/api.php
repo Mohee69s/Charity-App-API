@@ -24,7 +24,7 @@ Route::get('test', function () {
     ]);
 });
 Route::middleware(['auth:api'])->group(function () {
-
+Route::post('/fcm/token', [NotificationController::class, 'storeToken']);
     Route::post('/wallet/create', [WalletController::class, 'store']);
     Route::get('/logout', [AuthController::class, 'destroy']);
     Route::get('/campaigns/donations', [CampaignController::class, 'donation']);

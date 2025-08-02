@@ -92,6 +92,8 @@ class User extends Authenticatable implements JWTSubject
         return $this->roles()->whereIn('name', $roles)->exists();
     }
 
-
+    public function fcmTokens()
+    {
+        return $this->hasMany(FcmToken::class);
+    }
 }
-

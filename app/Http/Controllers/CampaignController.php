@@ -31,6 +31,7 @@ class CampaignController extends Controller
     }
     public function volunteer(Request $request)
     {
+        /** @var \App\Models\User $user */
         // This is for returning Volunteering campaigns
         $user = auth()->user();
         if (!$user->is_volunteer) {
@@ -78,8 +79,8 @@ class CampaignController extends Controller
     {
         $camp = Campaign::where("id", $id)->with("CampaignMedia")->first();
         return response()->json([
-            'Campaign'=>$camp
-            ]);
+            'Campaign' => $camp
+        ]);
     }
 
     public function donate(Request $request)
