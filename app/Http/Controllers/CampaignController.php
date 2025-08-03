@@ -31,7 +31,6 @@ class CampaignController extends Controller
     }
     public function volunteer(Request $request)
     {
-        /** @var \App\Models\User $user */
         // This is for returning Volunteering campaigns
         $user = auth()->user();
         if (!$user->is_volunteer) {

@@ -11,11 +11,17 @@ use Illuminate\Http\Request;
 
 class VolunteeringController extends Controller
 {
+    //volunteering logs
     public function index(Request $request)
     {
         $user = auth()->user();
 
         $subs = submit_users_opportunity::where("user_id", $user->id)->get();
+        if (!$subs){
+            return response()->json([
+                'message'=>'you haven\'t submitted any volunteering requests yet'
+            ]);
+        }
         $camps = [];
 
         foreach ($subs as $sub) {
@@ -76,7 +82,7 @@ class VolunteeringController extends Controller
 
         if (!$camp || !$camp->need_volunteers) {
             return response()->json([
-                'message' => 'This campaign does not need volunteers.'
+                'message' => 'This campaign does not need volunteers or the campaign doesn\'t exist .'
             ]);
         }
 
@@ -92,7 +98,7 @@ class VolunteeringController extends Controller
 
         if (!$vol && !$submission) {
             return response()->json([
-                'message' => 'You are not registered as volunteer.'
+                'message' => 'you don\'t have anything to cancel .'
             ]);
         }
 
@@ -153,11 +159,6 @@ class VolunteeringController extends Controller
             ]);
         }
         $opp = VolunteerOpportunities::where('campaign_id', $id)->first();
-        if (!$opp->need_volunteers) {
-            return response()->json([
-                'message' => 'this campaign doesn\'t need volunteers'
-            ]);
-        }
         $test = submit_users_opportunity::where('user_id', $user->id)->where('opportunity_id', $opp->id)->first();
         if ($test) {
             return response()->json([

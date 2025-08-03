@@ -19,6 +19,11 @@ class InKindDonationsController extends Controller
         if ($request->query('status')) {
             $don = $don->where('status', $request->query('status'));
         }
+        if (!$don) {
+            return response()->json([
+                'message' => 'you haven\'t made any in-kind donations yet'
+            ]);
+        }
         return response()->json([
             'inkinddonations' => $don
         ]);
@@ -30,8 +35,6 @@ class InKindDonationsController extends Controller
             'items.*.name' => 'required|string',
             'items.*.quantity' => 'required|numeric',
         ]);
-
-        $description = $request->description ?? null;
 
         $camp = Campaign::where('id', $id)->first();
         if (!$camp || !$camp->need_in_kind_donations) {

@@ -12,6 +12,12 @@ class DonationController extends Controller
     public function index(){
         $user_id=auth()->user()->id;
         $don=Donation::where('user_id',$user_id)->get();
+        if (!$don){
+            return response()->json([
+                'message'=> 'you haven\'t made any donations'
+                ]);
+        }
+
         return response()->json([
             'donations'=>$don
         ]);

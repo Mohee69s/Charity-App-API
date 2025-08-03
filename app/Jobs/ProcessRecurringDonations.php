@@ -61,7 +61,7 @@ class ProcessRecurringDonations implements ShouldQueue
                 ])->save();
                 $recurring->run_count += 1;
                 $recurring->save();
-                //TODO check if the recurring reminder is same day or day earlier 
+                //TODO check if the recurring reminder is same day or day earlier before notifying
             } else {
                 $recurring->update(['is_active' => false]);
 
@@ -75,9 +75,7 @@ class ProcessRecurringDonations implements ShouldQueue
                         "Your wallet balance is too low. We've paused your recurring donation."
                     );
                 }
-
             }
-
         }
     }
 }
