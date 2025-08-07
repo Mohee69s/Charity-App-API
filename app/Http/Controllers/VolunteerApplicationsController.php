@@ -16,8 +16,6 @@ class VolunteerApplicationsController extends Controller
             "full_name" => "required",
             "phone_number" => "required|numeric",
             "skils" => "required",
-            "available_time" => "required",
-            "hours_per_week" => "required",
             "previous_experience" => "required",
             "gender" => "required",
             "age" => "required"
@@ -27,8 +25,8 @@ class VolunteerApplicationsController extends Controller
             "full_name" => $request->full_name,
             "phone_number" => $request->phone_number,
             "skills" => $request->skills,
-            "available_time" => $request->available_time,
-            "hours_per_week" => $request->hours_per_week,
+            "available_time" => 'notUsed',
+            "hours_per_week" => 'notUsed',
             "previous_experience" => $request->previous_experience,
             "gender" => $request->gender,
             "age" => $request->age,
@@ -36,6 +34,14 @@ class VolunteerApplicationsController extends Controller
 
         return response()->json(data: [
             "message" => "Volunteer application sent successfully, wait for your approval in the next 48 hours"
+        ]);
+    }
+    public function status(){
+        $user = auth()->user();
+        $sub = VolunteerApplications::where('user_id', auth()->user()->id)->first();
+        $result = $sub->status ?? 'have_not_applied';
+        return response()->json([
+           'status'=>$result
         ]);
     }
 }

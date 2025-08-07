@@ -148,4 +148,13 @@ class CampaignController extends Controller
             "message" => "wrong pin",
         ]);
     }
+    public function typesOfCampaigns(){
+        $types = Campaign::where('status', 'active')
+            ->distinct()
+            ->pluck('campaign_type');
+        return response()->json([
+            'types'=>$types
+        ]);
+
+    }
 }

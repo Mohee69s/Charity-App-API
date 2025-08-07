@@ -7,7 +7,6 @@ use App\Models\wallet;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use InvalidArgumentException;
 class RecurringDonationsController extends Controller
 {
     public function index(): JsonResponse
@@ -73,6 +72,7 @@ class RecurringDonationsController extends Controller
         $total = $rec->run_count * $rec->amount;
         return response()->json([
             'message'=>'Recurring Donation has been stopped',
+            'info'=>$rec,
             'total'=>$total
         ]);
 

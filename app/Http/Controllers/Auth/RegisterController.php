@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\VolunteerApplications;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Hash;
+use Tymon\JWTAuth\Facades\JWTAuth;
+
 
 class RegisterController extends Controller
 {
@@ -20,28 +23,39 @@ class RegisterController extends Controller
     public function register(Request $request): JsonResponse
     {
         $request->validate([
-            'name'=>['required','string'],
+            // 'name'=>['required','string'],
             'email' => ['required', 'string', 'max:255','email','unique:users,email'],
             'password' => ['required', 'min:8'],
             'phone'=>'required',
-            'birth_date' => 'required'
+            // 'birth_date' => 'required'
         ]);
 
         $user = User::create([
-            'full_name'=>$request->name,
+            'full_name'=>'something',
             'email' => $request->email,
             'phone_number' => $request-> phone,
             'password_hash' => Hash::make($request->password),
-            'birth_date'=>$request->birth_date,
+            'birth_date'=>Carbon::now(),
+            'has_wallet'=>false,
             'is_volunteer' => false
         ]);
 
         event(new Registered($user));
 
-
+        $credentials = $request -> only('email', 'password');
+        JWTAuth::factory()->setTTL(60*24*30);
+        if (!$token = JWTAuth::attempt($credentials) ){
+            return response()->json(['error'=> 'Invalid credentials'],401);
+        }
+        $user = auth()->user()->makeHidden(['password_hash','is_volunteer']);
+        $sub = VolunteerApplications::where('user_id', auth()->user()->id)->first();
+        $result = $sub->status ?? 'have_not_applied';
+        $user['volunteer']=$result;
         return response()->json([
-            'message' => 'User registered successfully',
-            'user' => $user,
+            'user'=>$user,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60*24*30,
         ]);
     }
 }

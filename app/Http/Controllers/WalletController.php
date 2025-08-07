@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\wallet;
 use App\Models\Role;
+use App\Models\wallet;
 use App\Models\WalletTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,11 +14,11 @@ class WalletController extends Controller
     {
         if (auth()->user()->wallet) {
             return response()->json([
-                'message' => 'you have a wallet, you can not create another one'
+                'message' => 'you have a wallet, you can not create another one',
             ]);
         }
         $request->validate([
-            "wallet_pin" => 'required|min:4|max:5'
+            'wallet_pin' => 'required|min:4|max:5',
         ]);
 
         $auth = auth()->id();
@@ -26,7 +26,7 @@ class WalletController extends Controller
         wallet::create([
             'user_id' => $auth,
             'wallet_pin' => $request->wallet_pin,
-            'balance' => 0
+            'balance' => 0,
         ])->save();
 
         $user = auth()->user();
@@ -40,33 +40,35 @@ class WalletController extends Controller
         }
 
         $all = $this->allwalletdata();
+
         return response()->json([
             'message' => 'Wallet has been created',
-            $all
+            $all,
         ]);
     }
-
 
     public function index(Request $request)
     {
         $request->validate([
-            'wallet_pin' => 'required'
+            'wallet_pin' => 'required',
         ]);
         $wallet = wallet::where('user_id', $request->user()->id)->first();
-        if (!$wallet) {
+        if (! $wallet) {
             return response()->json([
-                'message' => 'you haven\'t created a wallet yet'
+                'message' => 'you haven\'t created a wallet yet',
             ]);
         }
         if ($request->wallet_pin != $wallet->wallet_pin) {
             return response()->json([
-                'message' => 'Wrong pin'
+                'message' => 'Wrong pin',
             ]);
         }
+
         return response()->json([
-            'balance' => $wallet->balance
+            'balance' => $wallet->balance,
         ]);
     }
+
     public function update(Request $request)
     {
         $request->validate([
@@ -78,7 +80,7 @@ class WalletController extends Controller
         $wallet = wallet::where('user_id', $request->user()->id)->first();
         if ($request->wallet_pin != $wallet->wallet_pin) {
             return response()->json([
-                'message' => 'invalid pin'
+                'message' => 'invalid pin',
             ]);
         }
         $wallet->balance += $request->amount;
@@ -90,7 +92,6 @@ class WalletController extends Controller
             'amount' => $request->amount,
             // 'created_at'=>Carbon::now(),
         ])->save();
-
 
         return response()->json([
             'from' => auth()->user()->full_name,
@@ -108,6 +109,7 @@ class WalletController extends Controller
         $trans = WalletTransaction::where('wallet_id', $wallet->id)->with('campaign')->with('campaign.CampaignMedia')->get();
         $totaltopped = $trans->where('type', 'topup')->sum('amount');
         $totaldonated = $trans->where('type', 'donation')->sum('amount');
+
         return response()->json([
             'Wallet' => $wallet,
             'total_payed' => $totaltopped,
