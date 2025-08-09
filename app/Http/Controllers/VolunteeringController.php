@@ -178,4 +178,45 @@ class VolunteeringController extends Controller
     }
 
 
+    public function CheckCancel($userId, $campaignId): bool
+    {
+        $camp = Campaign::find($campaignId);
+        if (!$camp || !$camp->need_volunteers) {
+            return false;
+        }
+
+        $vol = CampaignVoulnteers::where('campaign_id', $campaignId)
+            ->where('user_id', $userId)
+            ->first();
+
+        $submission = submit_users_opportunity::where('user_id', $userId)
+            ->whereHas('opportunity', function ($q) use ($campaignId) {
+                $q->where('campaign_id', $campaignId);
+            })
+            ->first();
+
+        if (!$vol && !$submission) {
+            return false;
+        }
+
+        $startDate = Carbon::parse($camp->start_date);
+
+        if ($submission && $submission->status === 'pending') {
+            return true;
+        }
+
+        $volunteeringStatus = $vol ? $vol->status : null;
+
+        if ($volunteeringStatus !== 'pending') {
+            return false;
+        }
+
+        if ($startDate->isPast()) {
+            return false;
+        }
+
+        $hoursLeft = now()->diffInHours($startDate, false);
+
+        return $hoursLeft > 24;
+    }
 }

@@ -15,7 +15,7 @@ class VolunteerApplicationsController extends Controller
         $request->validate([
             "full_name" => "required",
             "phone_number" => "required|numeric",
-            "skils" => "required",
+            "skills" => "required",
             "previous_experience" => "required",
             "gender" => "required",
             "age" => "required"
@@ -26,7 +26,7 @@ class VolunteerApplicationsController extends Controller
             "phone_number" => $request->phone_number,
             "skills" => $request->skills,
             "available_time" => 'notUsed',
-            "hours_per_week" => 'notUsed',
+            "hours_per_week" => 0,
             "previous_experience" => $request->previous_experience,
             "gender" => $request->gender,
             "age" => $request->age,

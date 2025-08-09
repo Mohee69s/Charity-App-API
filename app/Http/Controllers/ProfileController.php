@@ -22,22 +22,22 @@ class ProfileController extends Controller
         $user = auth()->user();
 
         $request->validate([
-            'otp'=>'required|numeric',
+            'otp' => 'required|numeric',
             'password' => 'required',
         ]);
 
 
-         if((new Otp)->validate($user->email,$request->otp )->status){
-        $user->password_hash = Hash::make($request->password);
-        $user->save();
+        if ((new Otp)->validate($user->email, $request->otp)->status) {
+            $user->password_hash = Hash::make($request->password);
+            $user->save();
 
+            return response()->json([
+                'message' => 'Password updated successfully.',
+            ]);
+        }
         return response()->json([
-            'message' => 'Password updated successfully.',
+            'message' => 'wrong otp'
         ]);
-}
-return response()->json([
-    'message'=>'wrong otp'
-]);
     }
 
     public function store(Request $request)
@@ -62,18 +62,19 @@ return response()->json([
         ]))->filter()->all(); // remove null, empty, etc.
 
         $user->update($data);
-
-    }
-
-    public function requestOtp()
-    {
-        $email = auth()->user()->email;
-        $pin = (new Otp)->generate($email, 'numeric', 6, 15);
-
         return response()->json([
-            'pin' => $pin,
+            'message' => 'data updated successfully',
+            'user' => $user,
         ]);
     }
+    public function requestOTP()
+    {
+        $email = auth()->user()->email;
+        $otp = (new Otp)->generate($email, 'numeric', 6, 15);
 
-    
+        //TODO notify with otp
+        return response()->json([
+            'otp' => $otp,
+        ]);
+    }
 }

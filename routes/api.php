@@ -51,7 +51,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('/recurring', [RecurringDonationsController::class, 'index']);
         Route::post('/recurring', [RecurringDonationsController::class, 'store']);
         Route::patch('/recurring/{id}', [RecurringDonationsController::class, 'destroy']);
-    
+
         // In-Kind Donations
         Route::get('/inkind', [InKindDonationsController::class, 'index']);
         Route::post('/inkind/{id}', [InKindDonationsController::class, 'store']);
@@ -69,12 +69,12 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/get-volunteering-status', [VolunteerApplicationsController::class, 'status']);
     Route::middleware(['role:volunteer,!beneficiary'])->group(function () {
             // Volunteering Opportunities & Campaigns
-            Route::get('/campaigns/volunteering', [CampaignController::class, 'volunteer']);
+            Route::get('/campaigns-volunteering', [CampaignController::class, 'volunteer']);
             Route::get('/opportunity/{id}', [VolunteerOpportunitiesController::class, 'index']);
-            Route::get('/volunteer/{id}', [CampaignController::class, 'camp']);
-        
+            Route::get('/volunteer/{id}', [CampaignController::class, 'volcamp']);
+
             // Volunteer Applications
-        
+
             // Volunteering Actions
             Route::get('/volunteerlog', [VolunteeringController::class, 'index']);
             Route::patch('/volunteeringcancel', [VolunteeringController::class, 'cancelVol']);
@@ -91,15 +91,15 @@ Route::middleware(['auth:api'])->group(function () {
         // Educational Assistance
         Route::post('/educational-request', [EducationalRequestController::class, 'store']);
         Route::get('/educational-form', [EducationalRequestController::class, 'index']);
-    
+
         // Food Assistance
         Route::post('/food-request', [FoodRequestController::class, 'store']);
         Route::get('/food-form', [FoodRequestController::class, 'index']);
-    
+
         // Medical Assistance
         Route::post('/medical-request', [MedicalRequestController::class, 'store']);
         Route::get('/medical-form', [MedicalRequestController::class, 'index']);
-    });    
+    });
 
     /** -------------------------------
      *  Profile / Authentication

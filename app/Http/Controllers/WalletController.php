@@ -117,4 +117,8 @@ class WalletController extends Controller
             'Transactions' => $trans,
         ]);
     }
+
+    public function forgetPin(Request $request){
+        
+    }
 }
