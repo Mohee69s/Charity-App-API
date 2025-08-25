@@ -17,9 +17,9 @@ class VolunteeringController extends Controller
         $user = auth()->user();
 
         $subs = submit_users_opportunity::where("user_id", $user->id)->get();
-        if (!$subs){
+        if (!$subs) {
             return response()->json([
-                'message'=>'you haven\'t submitted any volunteering requests yet'
+                'message' => 'you haven\'t submitted any volunteering requests yet'
             ]);
         }
         $camps = [];
@@ -27,8 +27,7 @@ class VolunteeringController extends Controller
         foreach ($subs as $sub) {
             $vol = VolunteerOpportunities::where('id', $sub->opportunity_id)->first();
             $camp = Campaign::where('id', $vol->campaign_id)->first();
-            $campvol = CampaignVoulnteers::where('campaignId', $camp->id)->first();
-
+            $campvol = CampaignVoulnteers::where('campaign_id', $camp->id)->first();
             $camp['submittion_status'] = $sub->status;
 
             if ($sub->status == 'accepted') {
@@ -73,7 +72,7 @@ class VolunteeringController extends Controller
             $camps[] = $camp;
         }
 
-        return response()->json($camps);
+        return response()->json(['Log'=>$camps]);
     }
     public function cancelVol($id)
     {
@@ -146,7 +145,7 @@ class VolunteeringController extends Controller
     public function store($id)
     {
         $user = auth()->user();
-        if ($user->is_volunteer) {
+        if (!$user->is_volunteer) {
             return response()->json([
                 'message' => 'you are not a volunteer'
             ]);
@@ -165,15 +164,27 @@ class VolunteeringController extends Controller
                 'message' => 'you\'re already volunteered here'
             ]);
         }
+
         submit_users_opportunity::create([
             'user_id' => $user->id,
             'opportunity_id' => $opp->id,
             'approved' => false,
             'status' => 'pending',
             'submitted_at' => now(),
-        ])->save();
+            ])->save();
+
+        $dateTime = Carbon::parse($camp->start_date);
+        $date = $dateTime->toDateString();
+
+        $start = $camp->start_date ? Carbon::parse($camp->start_date)->format('H:i') : null;
+        $end   = $camp->end_date   ? Carbon::parse($camp->end_date)->format('H:i')   : null;
+        $camp->setAttribute('work_time', ($start && $end) ? "{$start}-{$end}" : null);
         return response()->json([
-            'message' => 'done, wait for approval'
+            'name' => $user->full_name,
+            'campaign' => $camp->name,
+            'date' => $date,
+            'time' => "{$start}-{$end}"??"No time specified",
+            'location' => $camp->location
         ]);
     }
 

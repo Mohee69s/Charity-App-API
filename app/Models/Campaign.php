@@ -34,4 +34,7 @@ class Campaign extends Model
         return $this->hasMany(CampaignVoulnteers::class);
 
     }
+    public function inKind(){
+        return $this->hasMany(InKind::class);
+    }
 }

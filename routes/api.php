@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssistanceRequestController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CampaignController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\EducationalRequestController;
 use App\Http\Controllers\FoodRequestController;
 use App\Http\Controllers\InKindDonationsController;
 use App\Http\Controllers\MedicalRequestController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RecurringDonationsController;
 use App\Http\Controllers\VolunteerApplicationsController;
@@ -15,17 +17,25 @@ use App\Http\Controllers\VolunteeringController;
 use App\Http\Controllers\VolunteerOpportunitiesController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WalletTransactionsController;
+use App\Events\MessageSent;
+use App\Models\Role;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, "login"]);
 Route::post('/register', [RegisterController::class, "register"]);
 
-Route::get('test', function () {
-    return response()->json([
-        'message' => 'noice from nvim'
-    ]);
-});
+// Route::post('/test', function (Request $request) {
+//     $message = "الاشعارات بالجيبة";
+//     event(new MessageSent($message));
+
+//     return response()->json([
+//         'status' => 'Message broadcasted',
+//         'message' => $message
+//     ]);
+// });
 Route::middleware(['auth:api'])->group(function () {
+
 
     /** -------------------------------
      *  Wallet and Donation Routes
@@ -68,18 +78,17 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/volunteer-apply', [VolunteerApplicationsController::class, 'store']);
     Route::get('/get-volunteering-status', [VolunteerApplicationsController::class, 'status']);
     Route::middleware(['role:volunteer,!beneficiary'])->group(function () {
-            // Volunteering Opportunities & Campaigns
-            Route::get('/campaigns-volunteering', [CampaignController::class, 'volunteer']);
-            Route::get('/opportunity/{id}', [VolunteerOpportunitiesController::class, 'index']);
-            Route::get('/volunteer/{id}', [CampaignController::class, 'volcamp']);
+        // Volunteering Opportunities & Campaigns
+        Route::get('/campaigns-volunteering', [CampaignController::class, 'volunteer']);
+        Route::get('/opportunity/{id}', [VolunteerOpportunitiesController::class, 'index']);
+        Route::get('/volunteer/{id}', [CampaignController::class, 'volcamp']);
 
-            // Volunteer Applications
+        // Volunteer Applications
 
-            // Volunteering Actions
-            Route::get('/volunteerlog', [VolunteeringController::class, 'index']);
-            Route::patch('/volunteeringcancel', [VolunteeringController::class, 'cancelVol']);
-            Route::post('/volunteer/{id}', [VolunteeringController::class, 'store']);
-
+        // Volunteering Actions
+        Route::get('/volunteerlog', [VolunteeringController::class, 'index']);
+        Route::patch('/volunteeringcancel', [VolunteeringController::class, 'cancelVol']);
+        Route::post('/volunteer/{id}', [VolunteeringController::class, 'store']);
     });
 
 
@@ -87,7 +96,7 @@ Route::middleware(['auth:api'])->group(function () {
      *  Forms and Applications
      *  ------------------------------- */
 
-    Route::middleware(['role:beneficiary,!donator,!volunteer'])->group(function () {
+    Route::middleware(['role:!donator,!volunteer'])->group(function () {
         // Educational Assistance
         Route::post('/educational-request', [EducationalRequestController::class, 'store']);
         Route::get('/educational-form', [EducationalRequestController::class, 'index']);
@@ -99,6 +108,9 @@ Route::middleware(['auth:api'])->group(function () {
         // Medical Assistance
         Route::post('/medical-request', [MedicalRequestController::class, 'store']);
         Route::get('/medical-form', [MedicalRequestController::class, 'index']);
+
+        Route::get('/assistance-types', [AssistanceRequestController::class, 'index']);
+        Route::get('/assistance-log', [AssistanceRequestController::class,'log']);
     });
 
     /** -------------------------------
@@ -109,4 +121,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/profile/password', [ProfileController::class, 'updatepassword']);
     Route::get('/forget-password', [ProfileController::class, 'ForgetPassword']);
     Route::get('/logout', [AuthController::class, 'destroy']);
+    Route::get ('/home', [CampaignController::class,'completedCampaigns']);
+
+    Route::get('notifications', [NotificationController::class,'index']);
 });

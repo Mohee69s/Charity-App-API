@@ -25,73 +25,108 @@ class CampaignController extends Controller
                 $query->where("need_donations", true)
                     ->orWhere("campaign_type", $type);
             })
-            ->get();
+            ->with("inKind")->get();
 
         return response()->json($campaigns);
     }
 
 
-public function volunteer(Request $request)
-{
-    $user = auth()->user();
-    if (!$user->is_volunteer) {
-        return response()->json(["message" => "You're not volunteered"]);
-    }
+    public function volunteer(Request $request, VolunteerService $volunteerservice)
+    {
+        $user = auth()->user();
+        if (!$user->is_volunteer) {
+            return response()->json(['message' => "You're not volunteered"], 403);
+        }
 
-    $camps = Campaign::query()
-        ->where('need_volunteers', true)
-        ->when($request->query('type'), fn ($q, $type) => $q->where('type', $type))
-        ->with('campaignMedia:id,campaign_id,url,media_type')
-        ->get()
-        ->map(function ($camp) {
-            $media = $camp->campaignMedia; // Model or null (not a Collection)
+        $camps = Campaign::query()
+            ->where('need_volunteers', true)
+            ->when($request->query('type'), fn($q, $type) => $q->where('type', $type))
+            ->with([
+                'campaignMedia:id,campaign_id,url,media_type',
+                'VolunteerOpportunities' => fn($q) => $q->select(
+                    'id',
+                    'campaign_id',
+                    'title',
+                    'tasks',
+                    'duration',
+                    'location',
+                    'created_at'
+                ),
+            ])
+            ->get();
+
+        $oppByCamp = [];
+        foreach ($camps as $camp) {
+            $firstOpp = $camp->VolunteerOpportunities?->first();
+            if ($firstOpp) {
+                $oppByCamp[$camp->id] = $firstOpp->id;
+            }
+        }
+
+
+        $subs = submit_users_opportunity::query()
+            ->where('user_id', $user->id)
+            ->when($oppByCamp, fn($q) => $q->whereIn('opportunity_id', array_values($oppByCamp)))
+            ->get()
+            ->keyBy('opportunity_id');
+        $camps = $camps->map(function ($camp) use ($user, $volunteerservice, $oppByCamp, $subs) {
+            $media = $camp->campaignMedia;
             $camp->setAttribute('url', $media?->url);
             $camp->setAttribute('media_type', $media?->media_type);
+
+            $oppId = $oppByCamp[$camp->id] ?? null;
+            $camp->setAttribute('submitted', $oppId ? $subs->has($oppId) : false);
+            $camp->setAttribute('can_cancel', (bool) $volunteerservice->canCancel($user->id, $camp->id));
+
             $camp->unsetRelation('campaignMedia');
+
+            $start = $camp->start_date ? Carbon::parse($camp->start_date)->format('H:i') : null;
+            $end = $camp->end_date ? Carbon::parse($camp->end_date)->format('H:i') : null;
+            $camp->setAttribute('work_time', ($start && $end) ? "{$start}-{$end}" : null);
+
             return $camp;
         });
 
-    return response()->json(['campaigns' => $camps]);
-}
-
-
-public function volcamp($id, VolunteerService $volunteerservice)
-{
-    $user = auth()->user();
-
-    $camp = Campaign::where('id', $id)
-        ->with('campaignMedia') // hasOne relation
-        ->with('VolunteerOpportunities')
-        ->firstOrFail();
-
-    $opp = VolunteerOpportunities::where('campaign_id', $id)->first();
-    if (!$opp) {
-        dd('no opp');
+        return response()->json(['campaigns' => $camps]);
     }
 
-    $sub = submit_users_opportunity::where('user_id', $user->id)
-        ->where('opportunity_id', $opp->id)
-        ->first();
-
-    $can_cancel = $volunteerservice->canCancel($user->id, $id);
-
-    $submitted = (bool) $sub;
-
-    // Merge media data into campaign
-    $media = $camp->campaignMedia;
-    $camp->setAttribute('url', $media?->url);
-    $camp->setAttribute('media_type', $media?->media_type);
-    $camp->unsetRelation('campaignMedia');
-
-    return response()->json([
-        'camp'       => $camp,
-        'submitted'  => $submitted,
-        'can_cancel' => $can_cancel,
-    ]);
-}
-   public function doncamp($id)
+    public function volcamp($id, VolunteerService $volunteerservice)
     {
-        $camp = Campaign::where("id", $id)->with("CampaignMedia")->first();
+        $user = auth()->user();
+
+        $camp = Campaign::where('id', $id)
+            ->with('campaignMedia') // hasOne relation
+            ->with('VolunteerOpportunities')
+            ->firstOrFail();
+
+        $opp = VolunteerOpportunities::where('campaign_id', $id)->first();
+        if (!$opp) {
+            dd("mohee");
+        }
+
+        $sub = submit_users_opportunity::where('user_id', $user->id)
+            ->where('opportunity_id', $opp->id)
+            ->first();
+
+        $can_cancel = $volunteerservice->canCancel($user->id, $id);
+
+        $submitted = (bool) $sub;
+
+        // Merge media data into campaign
+        $media = $camp->campaignMedia;
+        $camp->setAttribute('url', $media?->url);
+        $camp->setAttribute('media_type', $media?->media_type);
+        $camp->unsetRelation('campaignMedia');
+
+        return response()->json([
+            'camp' => $camp,
+            'submitted' => $submitted,
+            'can_cancel' => $can_cancel,
+        ]);
+    }
+    public function doncamp($id)
+    {
+        $camp = Campaign::where("id", $id)->with("CampaignMedia")->with("inKind")->first();
         return response()->json([
             'campaign' => $camp
         ]);
@@ -165,11 +200,30 @@ public function volcamp($id, VolunteerService $volunteerservice)
     }
     public function typesOfCampaigns()
     {
-        $types = Campaign::where('status', 'active')->where('need_volunteers',true )
+        $types = Campaign::where('status', 'active')->where('need_volunteers', true)
             ->distinct()
             ->pluck('campaign_type');
         return response()->json([
             'types' => $types
         ]);
+    }
+    public function completedCampaigns()
+    {
+        $completed = Campaign::where('status', 'completed')
+            ->with('VolunteerOpportunities')
+            ->get();
+
+        $withOpportunities = $completed->filter(function ($campaign) {
+            return $campaign->VolunteerOpportunities && $campaign->VolunteerOpportunities->count() > 0;
+        });
+
+        $withoutOpportunities = $completed->filter(function ($campaign) {
+            return !$campaign->VolunteerOpportunities || $campaign->VolunteerOpportunities->count() === 0;
+        });
+        return response()->json([
+            'Donation campaigns'=> $withoutOpportunities,
+            'Volunteering campaigns'=> $withOpportunities
+        ]);
+
     }
 }

@@ -6,6 +6,7 @@ use App\Models\AssitanceRequest;
 use App\Models\EducationalApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Role;
 use Illuminate\Support\Facades\DB;
 
 class EducationalRequestController extends Controller
@@ -31,7 +32,7 @@ class EducationalRequestController extends Controller
             'reasonForSupport' => 'required',
             'needsBooks' => 'required',
             'needsTuitionSupport' => 'required',
-           'currentGPA' => 'required',
+            'currentGPA' => 'required',
             'specialization' => 'required',
             'semesterStartDate' => 'required'
         ]);
@@ -45,6 +46,11 @@ class EducationalRequestController extends Controller
         $temp = $request->all();
         $temp['request_id'] = $req->id;
         $req->save();
+        $user= auth()->user();
+        $roleId = Role::where('name', 'beneficiary')->value('id');
+        if ($roleId) {
+            $user->roles()->syncWithoutDetaching([$roleId]);
+        }
         EducationalApplication::create($temp);
         return response()->json([
             'message' => 'request has been placed, wait for approval'

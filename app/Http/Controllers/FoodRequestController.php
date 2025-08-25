@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use App\Models\Role;
 use App\Models\FoodApplication;
 use App\Models\AssitanceRequest;
 
@@ -41,11 +42,15 @@ class FoodRequestController extends Controller
             'user_id' => auth()->user()->id
         ]);
         $temp = $request->all();
-        $temp['request_id']=$req->id;
+        $temp['request_id'] = $req->id;
         $req->save();
+        $roleId = Role::where('name', 'beneficiary')->value('id');
+        if ($roleId) {
+            $user->roles()->syncWithoutDetaching([$roleId]);
+        }
         FoodApplication::create($temp);
         return response()->json([
-            'message'=>'request has been placed, wait for approval'
+            'message' => 'request has been placed, wait for approval'
         ]);
     }
 }

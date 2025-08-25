@@ -9,7 +9,13 @@ class submit_users_opportunity extends Model
 {
     /** @use HasFactory<\Database\Factories\SubmitUsersOpportunityFactory> */
     use HasFactory;
-    public function opportunity(){
+    const UPDATED_AT = null;
+    const CREATED_AT = null;
+    public $incrementing = false;
+    protected $primaryKey = null;
+    protected $keyType = 'string';
+    public function opportunity()
+    {
         return $this->belongsTo(VolunteerOpportunities::class);
     }
 }

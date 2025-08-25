@@ -10,4 +10,7 @@ class InKind extends Model
     public function InKindDonation(){
         return $this -> hasMany(InKindDonation::class);
     }
+    public function campaign(){
+        return $this -> belongsTo(Campaign::class);
+    }
 }

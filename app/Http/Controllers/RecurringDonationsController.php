@@ -25,7 +25,7 @@ class RecurringDonationsController extends Controller
             'start_date'=>'date|required',
             'type'=>'required|in:food,education,health,most_need',
             'wallet_pin'=>'required',
-            'reminder_notification'=>'required|in:one_day_before,when_the_time_comes'
+            'reminder_notification'=>'required'
         ]);
         $user_id=auth()->user()->id;
 //        $wallet=wallet::where('user_id',$user_id)->first();
@@ -44,14 +44,22 @@ class RecurringDonationsController extends Controller
             'yearly'=> $start->copy()->addYear(),
             default => throw new InvalidArgumentException("Invalid period: $period")
         };
+        $rem =0;
+        if ($request->reminder_notification=="one_day_before"){
+            $rem =2;
+        }
+        else if ($request->reminder_notification== "when_the_time_comes"){
+            $rem = 1;
+        }
         RecurringDonation::create([
             'user_id'=>$user_id,
             'type'=>$request->type,
             'amount'=>$request->amount,
             'period'=>$request->period,
             'start_date'=>$request->start_date,
-            'next_run'=> $nextdate,
-            'is_active'=>true
+            'next_run'=> $request->start_date,
+            'is_active'=>true,
+            'reminder_notification'=>$rem
         ])->save();
         return response()->json([
             'from' =>auth()->user()->full_name,
