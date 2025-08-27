@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\SendEmail;
 use Ichtrojan\Otp\Otp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+
+use Illuminate\Support\Facades\Mail;
 
 class ProfileController extends Controller
 {
@@ -74,14 +77,16 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function requestOTP()
+    public function requestOTP(Request $request)
     {
-        $email = auth()->user()->email;
-        $otp = (new Otp)->generate($email, 'numeric', 6, 15);
-
-        //TODO notify with otp
+       $request->validate([
+        'email'=>'required|email'
+        ]);
+        $otp = (new Otp)->generate($request->email, 'numeric', 6, 15);
+        $message = 'here is your one time password to reset your password/pin '. $otp->token .' this will be valide for 15 minutes';
+        Mail::to($request->email)->send(new SendEmail($message));
         return response()->json([
-            'otp' => $otp,
+            'message'=> 'OTP has been sent, check you email address',
         ]);
     }
 }

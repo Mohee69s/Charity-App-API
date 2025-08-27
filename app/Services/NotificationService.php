@@ -15,7 +15,7 @@ class NotificationService
     private static function boot(): void
     {
         if (self::$baseUrl === null) {
-            self::$baseUrl = rtrim(env('NOTIFICATION_URL', 'http://localhost:3000/api/notification'), '/');
+            self::$baseUrl = rtrim(env('NOTIFICATION_URL', 'http://localhost:3000/notification'), '/');
             self::$token = (string) env('NOTIFICATION_TOKEN', '');
         }
     }
@@ -33,6 +33,13 @@ class NotificationService
                     'type' => $type,
                 ]);
 
+            // $res=Http::withToken(self::$token)
+            //     ->post(self::$baseUrl, [
+            //         'title' => $title,
+            //         'message' => $message,
+            //         'type'=> $type,
+            //     ]);
+
             if ($res->successful()) {
 
                 Notification::create([
@@ -40,7 +47,7 @@ class NotificationService
                     'title' => $title,
                     'message' => $message,
                     'status' => 'unread',
-                    'type'=>$type,
+                    'type' => $type,
                     'created_at' => Carbon::now(),
                 ]);
                 return $res->json();

@@ -18,6 +18,7 @@ use App\Http\Controllers\VolunteerOpportunitiesController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WalletTransactionsController;
 use App\Events\MessageSent;
+use App\Models\RecurringDonation;
 use App\Models\Role;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
@@ -25,15 +26,20 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, "login"]);
 Route::post('/register', [RegisterController::class, "register"]);
 
-// Route::post('/test', function (Request $request) {
-//     $message = "الاشعارات بالجيبة";
-//     event(new MessageSent($message));
+Route::post('/test', function (Request $request) {
+    $response = Http::withToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlhdCI6MTc1NjMwOTgzNCwiZXhwIjoyMDE1NTA5ODM0fQ.DXjgo2l5yU3MP3MUgi81DaoL_YAP3gxFx_c8cAGY1GE')
+        ->post('http://localhost:3000/api/notification/user/7', [
+            "title"=>"hii",
+            "message"=>"eww",
+            "type"=> "Recurring Donation",
+            
+        ]);
 
-//     return response()->json([
-//         'status' => 'Message broadcasted',
-//         'message' => $message
-//     ]);
-// });
+    $data = $response->json();
+    return response()->json($data);
+});
+
+
 Route::middleware(['auth:api'])->group(function () {
 
 
@@ -110,7 +116,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('/medical-form', [MedicalRequestController::class, 'index']);
 
         Route::get('/assistance-types', [AssistanceRequestController::class, 'index']);
-        Route::get('/assistance-log', [AssistanceRequestController::class,'log']);
+        Route::get('/assistance-log', [AssistanceRequestController::class, 'log']);
     });
 
     /** -------------------------------
@@ -121,7 +127,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/profile/password', [ProfileController::class, 'updatepassword']);
     Route::get('/forget-password', [ProfileController::class, 'ForgetPassword']);
     Route::get('/logout', [AuthController::class, 'destroy']);
-    Route::get ('/home', [CampaignController::class,'completedCampaigns']);
-
-    Route::get('notifications', [NotificationController::class,'index']);
+    Route::get('/home', [CampaignController::class, 'completedCampaigns']);
+    Route::get('notifications', [NotificationController::class, 'index']);
 });
+Route::get('/requestotp', [ProfileController::class,'requestOTP']);

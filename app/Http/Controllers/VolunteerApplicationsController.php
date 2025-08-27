@@ -29,6 +29,7 @@ class VolunteerApplicationsController extends Controller
             "hours_per_week" => 0,
             "previous_experience" => $request->previous_experience,
             "gender" => $request->gender,
+            
             "age" => $request->age,
         ])->save();
 

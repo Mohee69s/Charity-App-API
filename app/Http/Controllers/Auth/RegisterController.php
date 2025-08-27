@@ -23,15 +23,13 @@ class RegisterController extends Controller
     public function register(Request $request): JsonResponse
     {
         $request->validate([
-            // 'name'=>['required','string'],
             'email' => ['required', 'string', 'max:255','email','unique:users,email'],
             'password' => ['required', 'min:8'],
             'phone'=>'required',
-            // 'birth_date' => 'required'
         ]);
 
         $user = User::create([
-            'full_name'=>'something',
+            'full_name'=>'HasNotBeenSet',
             'email' => $request->email,
             'phone_number' => $request-> phone,
             'password_hash' => Hash::make($request->password),

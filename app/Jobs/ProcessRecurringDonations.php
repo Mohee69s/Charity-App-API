@@ -2,7 +2,11 @@
 
 namespace App\Jobs;
 
-use App\Models\{RecurringDonation, Wallet, Donation, WalletTransaction, User};
+use App\Models\{RecurringDonation, Donation, WalletTransaction, User};
+// If your model class is literally `wallet` (lowercase), keep this alias.
+// If it's `Wallet` (capital W), change this line to: use App\Models\Wallet;
+use App\Models\wallet as Wallet;
+
 use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,114 +15,130 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
-use Throwable;
 
 class ProcessRecurringDonations implements ShouldQueue
 {
-    use Queueable, Dispatchable, InteractsWithQueue, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    /** optional tuning */
+    public int $tries = 3;
+    public int $backoff = 5; // seconds
 
     public function handle(): void
     {
-        $now = Carbon::now();
+        $processed = 0;
 
-        // Pull due rows (include overdue)
-        $due = RecurringDonation::query()
-            ->where('is_active', true)
-            ->where('next_run', '<=', $now)
-            ->get();
+        $batchSize = 50;
 
-        /** @var NotificationService $notifier */
-        $notifier = app(NotificationService::class);
+        while (true) {
+            // 1) Find a small batch of due IDs using DB time and Postgres boolean
+            $ids = RecurringDonation::query()
+                ->whereRaw('is_active IS TRUE')
+                ->whereRaw('next_run <= now()')
+                ->orderBy('next_run')   // oldest first
+                ->orderBy('id')
+                ->limit($batchSize)
+                ->pluck('id');
 
-        foreach ($due as $row) {
-            try {
-                DB::transaction(function () use ($row, $notifier) {
-                    // Re-load and lock the exact row to avoid races
-                    /** @var RecurringDonation $r */
-                    $r = RecurringDonation::whereKey($row->id)
-                        ->lockForUpdate()
-                        ->first();
+            if ($ids->isEmpty()) {
+                break; // nothing due
+            }
 
-                    if (!$r || !$r->is_active)
-                        return;
-                    if (Carbon::parse($r->next_run)->gt(now()))
-                        return; // another worker advanced it
+            // 2) Process each ID atomically; re-check under row locks
+            foreach ($ids as $id) {
+                try {
+                    DB::transaction(function () use ($id) {
+                        /** @var RecurringDonation|null $r */
+                        $r = RecurringDonation::whereKey($id)->lockForUpdate()->first();
+                        if (!$r)
+                            return;
 
-                    $user = User::find($r->user_id);
-                    $wallet = Wallet::where('user_id', $r->user_id)->lockForUpdate()->first();
+                        // Still due & active?
+                        if (!$r->is_active || Carbon::parse($r->next_run)->gt(now())) {
+                            return;
+                        }
 
-                    if (!$wallet || $wallet->balance < $r->amount) {
-                        $r->update(['is_active' => false]);
-                        if ($user) {
-                            $notifier->sendToUser(
+                        // Lock wallet to avoid concurrent charges
+                        $wallet = Wallet::where('user_id', $r->user_id)->lockForUpdate()->first();
+                        if (!$wallet || $wallet->balance < $r->amount) {
+                            // Deactivate if we cannot charge
+                            $r->is_active = false;
+                            $r->save();
+                            if ($user = User::find($r->user_id)) {
+                            app(NotificationService::class)->sendToUser(
                                 $user->id,
                                 'Recurring Donation',
-                                "Your recurring donation (started {$r->start_date}) was stopped due to insufficient balance or missing wallet.",
-                                'admin_notify'
+                                "Your wallet does not have enough balance for the recurring donation, it will be stopped",
+                                'Recurring Donation'
+                            );
+                            return;
+                        }
+                        }
+
+                        // Charge
+                        $wallet->balance -= $r->amount;
+                        $wallet->save();
+
+                        $donation = Donation::create([
+                            'user_id' => $r->user_id,
+                            'amount' => $r->amount,
+                            'recurring' => true,
+                            'donation_date' => now(),
+                            'campaign_id' => null,
+                            // 'type'       => $r->type, // uncomment if your donations table has this
+                            // 'recurring_donation_id' => $r->id, // if you add the FK later
+                        ]);
+
+                        WalletTransaction::create([
+                            'wallet_id' => $wallet->id,
+                            'type' => 'donation',
+                            'amount' => $r->amount,
+                            'reference_id' => null,
+                            'created_at' => null
+                        ]);
+
+                        // Advance next_run once, then roll forward until it's in the future
+                        $r->run_count = ($r->run_count ?? 0) + 1;
+                        $r->next_run = self::advanceOnce($r->next_run, $r->period);
+                        while (Carbon::parse($r->next_run)->lte(now())) {
+                            $r->next_run = self::advanceOnce($r->next_run, $r->period);
+                        }
+                        $r->save();
+
+                        // Optional: receipt/notification
+                        if ($user = User::find($r->user_id)) {
+                            app(NotificationService::class)->sendToUser(
+                                $user->id,
+                                'Recurring Donation',
+                                "We received your recurring donation of ({$r->amount}). Thank you!",
+                                'Recurring Donation'
                             );
                         }
-                        return;
-                    }
 
-                    // Charge
-                    $wallet->balance -= $r->amount;
-                    $wallet->save();
-
-                    $donation = Donation::create([
-                        'user_id' => $r->user_id,
-                        'amount' => $r->amount,
-                        'recurring' => true,
-                        'approved' => 'approved',
-                        'donation_date' => now(),
-                        // 'type' => $r->type, // uncomment if you keep type on donations
-                    ]);
-
-                    WalletTransaction::create([
-                        'wallet_id' => $wallet->id,
-                        'type' => 'donation',
-                        'amount' => $r->amount,
-                        'reference_id' => $donation->id,
-                    ]);
-
-                    // Advance schedule
-                    $r->run_count += 1;
-                    $r->next_run = $this->advanceByPeriod($r->next_run, $r->period);
-                    // If the worker lagged, roll forward until future
-                    while (Carbon::parse($r->next_run)->lte(now())) {
-                        $r->next_run = $this->advanceByPeriod($r->next_run, $r->period);
-                    }
-                    $r->save();
-
-                    // Notifications:
-                    // Always send a receipt (recommended). If you ONLY want when reminder_notification==1, wrap with the if.
-
-                    if ($user) {
-                        $notifier->sendToUser(
-                            $user->id,
-                            'Recurring Donation',
-                            "We received your recurring donation of ({$r->amount}). Thank you!",
-                            'Recurring Donation'
-                        );
-                    }
-
-                }, 3);
-            } catch (Throwable $e) {
-                report($e);
-                $this->fail($e);
+                    }, 3);
+                } catch (\Throwable $e) {   // note the leading backslash
+                    report($e);
+                    $this->release($this->backoff);
+                }
             }
         }
+        logger()->info('ProcessRecurringDonations summary', [
+            'processed' =>  'eww', // increment this in your loop
+        ]);
+
+
     }
 
-    protected function advanceByPeriod($from, string $period): Carbon
+    private static function advanceOnce($from, string $period): Carbon
     {
         $dt = Carbon::parse($from);
 
         return match ($period) {
-            'daily' => $dt->copy()->addDay(),
-            'weekly' => $dt->copy()->addWeek(),
-            'monthly' => $dt->copy()->addMonth(),
-            'yearly' => $dt->copy()->addYear(),
-            default => $dt->copy()->addMonth(),
+            'daily' => $dt->addDay(),
+            'weekly' => $dt->addWeek(),
+            'monthly' => $dt->addMonth(),
+            'yearly' => $dt->addYear(),
+            default => $dt->addMonth(),
         };
     }
 }
