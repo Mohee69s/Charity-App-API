@@ -19,14 +19,16 @@ class CampaignController extends Controller
     public function donation(Request $request)
     {
         $type = $request->query("type");
-
-        $campaigns = Campaign::where("status", "active")
-            ->where(function ($query) use ($type) {
-                $query->where("need_donations", true)
-                    ->orWhere("campaign_type", $type);
-            })
-            ->with("inKind")->get();
-
+        if ($type) {
+            $campaigns = Campaign::where("status", "active")
+                ->where(function ($query) use ($type) {
+                    $query->where("need_donations", true)
+                        ->where("campaign_type", $type);
+                })
+                ->with("inKind")->get();
+        } else {
+            $campaigns = Campaign::where("status", "active")->where('need_donations', true)->with('inKind')->get();
+        }
         return response()->json($campaigns);
     }
 
@@ -42,17 +44,17 @@ class CampaignController extends Controller
             ->where('need_volunteers', true)
             ->when($request->query('type'), fn($q, $type) => $q->where('type', $type))
             ->with([
-                'campaignMedia:id,campaign_id,url,media_type',
-                'VolunteerOpportunities' => fn($q) => $q->select(
-                    'id',
-                    'campaign_id',
-                    'title',
-                    'tasks',
-                    'duration',
-                    'location',
-                    'created_at'
-                ),
-            ])
+                    'campaignMedia:id,campaign_id,url,media_type',
+                    'VolunteerOpportunities' => fn($q) => $q->select(
+                        'id',
+                        'campaign_id',
+                        'title',
+                        'tasks',
+                        'duration',
+                        'location',
+                        'created_at'
+                    ),
+                ])
             ->get();
 
         $oppByCamp = [];
@@ -79,13 +81,13 @@ class CampaignController extends Controller
             $camp->setAttribute('can_cancel', (bool) $volunteerservice->canCancel($user->id, $camp->id));
 
             $camp->unsetRelation('campaignMedia');
-            $datett= Carbon::parse($camp->date)->toDateString();
-            $camp->setAttribute('date',$datett);
+            $datett = Carbon::parse($camp->date)->toDateString();
+            $camp->setAttribute('date', $datett);
             $days_left = -Carbon::parse($camp->start_date)->diffInUTCDays(Carbon::now());
             if ($days_left < 0) {
                 $days_left = 0;
-            }else{
-                $days_left = floor($days_left );
+            } else {
+                $days_left = floor($days_left);
             }
             $camp->setAttribute('days_left', $days_left);
             $start = $camp->start_date ? Carbon::parse($camp->start_date)->format('H:i') : null;
@@ -208,13 +210,24 @@ class CampaignController extends Controller
     }
     public function typesOfCampaigns()
     {
-        $types = Campaign::where('status', 'active')->where('need_volunteers', true)
+        $types = Campaign::query()
+            ->where('status', 'active')
+            ->where('need_volunteers', true)
+            ->whereNotNull('campaign_type')
+            ->select('campaign_type')         // ensure DISTINCT applies to this column
             ->distinct()
-            ->pluck('campaign_type');
+            ->orderBy('campaign_type')
+            ->pluck('campaign_type')
+            ->values();
+
+        // Add "all" to the beginning (and ensure uniqueness just in case)
+        $types = collect(['all'])->merge($types)->unique()->values();
+
         return response()->json([
-            'types' => $types
+            'types' => $types,
         ]);
     }
+
     public function completedCampaigns()
     {
         $completed = Campaign::where('status', 'completed')
@@ -229,8 +242,8 @@ class CampaignController extends Controller
             return !$campaign->VolunteerOpportunities || $campaign->VolunteerOpportunities->count() === 0;
         });
         return response()->json([
-            'Donation campaigns'=> $withoutOpportunities,
-            'Volunteering campaigns'=> $withOpportunities
+            'Donation campaigns' => $withoutOpportunities,
+            'Volunteering campaigns' => $withOpportunities
         ]);
 
     }

@@ -134,5 +134,5 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/home', [CampaignController::class, 'completedCampaigns']);
     Route::get('notifications', [NotificationController::class, 'index']);
 });
-Route::get('/requestotp', [ProfileController::class, 'requestOTP']);
+Route::post('/requestotp', [ProfileController::class, 'requestOTP']);
 Route::post('/auth/password/reset', [ProfileController::class, 'forgetPassword']);

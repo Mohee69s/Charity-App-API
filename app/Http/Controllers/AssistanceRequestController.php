@@ -31,7 +31,7 @@ class AssistanceRequestController extends Controller
 
         $requests = AssitanceRequest::with(['educationalForm', 'medicalForm', 'foodForm'])
             ->where('user_id', $userId)
-            ->orderByDesc('created_at')   // same as ->latest()
+            ->orderByDesc('created_at')  
             ->get();
 
         $grouped = ['educational' => [], 'medical' => [], 'food' => []];

@@ -33,26 +33,6 @@ class NotificationService
                     'type' => $type,
                 ]);
 
-            // $res=Http::withToken(self::$token)
-            //     ->post(self::$baseUrl, [
-            //         'title' => $title,
-            //         'message' => $message,
-            //         'type'=> $type,
-            //     ]);
-
-            if ($res->successful()) {
-
-                Notification::create([
-                    'user_id' => $userId,
-                    'title' => $title,
-                    'message' => $message,
-                    'status' => 'unread',
-                    'type' => $type,
-                    'created_at' => Carbon::now(),
-                ]);
-                return $res->json();
-            }
-
             Log::warning('Notify failed', ['status' => $res->status(), 'body' => $res->body()]);
             return null;
         } catch (\Throwable $e) {

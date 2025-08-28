@@ -85,8 +85,6 @@ class ProcessRecurringDonations implements ShouldQueue
                             'recurring' => true,
                             'donation_date' => now(),
                             'campaign_id' => null,
-                            // 'type'       => $r->type, // uncomment if your donations table has this
-                            // 'recurring_donation_id' => $r->id, // if you add the FK later
                         ]);
 
                         WalletTransaction::create([
@@ -94,7 +92,7 @@ class ProcessRecurringDonations implements ShouldQueue
                             'type' => 'donation',
                             'amount' => $r->amount,
                             'reference_id' => null,
-                            'created_at' => null
+                            'created_at' => Carbon::now(),
                         ]);
 
                         // Advance next_run once, then roll forward until it's in the future

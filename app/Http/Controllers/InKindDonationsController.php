@@ -16,9 +16,6 @@ class InKindDonationsController extends Controller
     {
         $id = auth()->user()->id;
         $don = InKindDonation::where('user_id', $id)->with('InKind')->with('campaign')->get();
-        if ($request->query('status')) {
-            $don = $don->where('status', $request->query('status'));
-        }
         if (!$don) {
             return response()->json([
                 'message' => 'you haven\'t made any in-kind donations yet'
@@ -75,6 +72,7 @@ class InKindDonationsController extends Controller
                 'in_kind' => $inkind->id,
                 'campaign_id' => $camp->id,
                 'user_id' => auth()->user()->id,
+                'quantity' => $item['quantity'],
                 'description' => 'null',
             ]);
 

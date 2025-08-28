@@ -68,7 +68,7 @@ class VolunteeringController extends Controller
             $start = Carbon::parse($camp->start_date)->format('H:i');
             $end = Carbon::parse($camp->end_date)->format('H:i');
             $camp['time'] = $start . '-' . $end;
-
+            $camp['date'] = Carbon::parse($camp->start_date)->format('Y:M:d');
             $camps[] = $camp;
         }
 
