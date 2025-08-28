@@ -44,6 +44,7 @@ class FoodRequestController extends Controller
         $temp = $request->all();
         $temp['request_id'] = $req->id;
         $req->save();
+        $user = auth ()->user();
         $roleId = Role::where('name', 'beneficiary')->value('id');
         if ($roleId) {
             $user->roles()->syncWithoutDetaching([$roleId]);

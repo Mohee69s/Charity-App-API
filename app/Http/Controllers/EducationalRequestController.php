@@ -44,6 +44,10 @@ class EducationalRequestController extends Controller
             'user_id' => auth()->user()->id
         ]);
         $temp = $request->all();
+        //  if ($request->hasFile('profile_url')) {
+        //     $path = $request->file('profile_url')->store('profiles', 'public');
+        //     $data['profile_url'] = $path;
+        // }
         $temp['request_id'] = $req->id;
         $req->save();
         $user= auth()->user();
