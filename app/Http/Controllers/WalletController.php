@@ -7,6 +7,8 @@ use App\Models\wallet;
 use App\Models\WalletTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Ichtrojan\Otp\Otp;
+
 
 class WalletController extends Controller
 {
@@ -53,7 +55,7 @@ class WalletController extends Controller
             'wallet_pin' => 'required',
         ]);
         $wallet = wallet::where('user_id', $request->user()->id)->first();
-        if (! $wallet) {
+        if (!$wallet) {
             return response()->json([
                 'message' => 'you haven\'t created a wallet yet',
             ]);
@@ -74,9 +76,8 @@ class WalletController extends Controller
         $request->validate([
             'wallet_pin' => 'required',
             'amount' => 'required',
-            // 'method' =>' required'
         ]);
-        $method = $request->method;
+
         $wallet = wallet::where('user_id', $request->user()->id)->first();
         if ($request->wallet_pin != $wallet->wallet_pin) {
             return response()->json([
@@ -90,7 +91,6 @@ class WalletController extends Controller
             'wallet_id' => $wallet->id,
             'type' => 'topup',
             'amount' => $request->amount,
-            // 'created_at'=>Carbon::now(),
         ])->save();
 
         return response()->json([
@@ -118,7 +118,23 @@ class WalletController extends Controller
         ]);
     }
 
-    public function forgetPin(Request $request){
-        
+    public function forgetPin(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required|numeric',
+            'new_pin' => 'required|numeric',
+        ]);
+        $user = auth()->user();
+        $result = (new Otp())->validate($user->email, $request->otp);
+        if (!$result->status)
+            return response()->json(['message' => 'Invalid or expired OTP.'], 422);
+        $wallet = wallet::where('user_id', $user->id)->first();
+        $wallet->wallet_pin = $request->new_pin;
+        $wallet->save();
+        return response()->json([
+            'message'=>'PIN updated successfully'
+        ],200);
+
+
     }
 }

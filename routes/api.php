@@ -20,23 +20,28 @@ use App\Http\Controllers\WalletTransactionsController;
 use App\Events\MessageSent;
 use App\Models\RecurringDonation;
 use App\Models\Role;
+
 use Carbon\Carbon;
+use Ichtrojan\Otp\Otp;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, "login"]);
 Route::post('/register', [RegisterController::class, "register"]);
 
-Route::post('/test', function (Request $request) {
-    $response = Http::withToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlhdCI6MTc1NjMwOTgzNCwiZXhwIjoyMDE1NTA5ODM0fQ.DXjgo2l5yU3MP3MUgi81DaoL_YAP3gxFx_c8cAGY1GE')
-        ->post('http://localhost:3000/api/notification/user/7', [
-            "title"=>"hii",
-            "message"=>"eww",
-            "type"=> "Recurring Donation",
-            
-        ]);
+Route::get('/test', function (Request $request) {
+    $request->validate([
+        'email' => 'required|email',
+    ]);
+    $otp = (new Otp())->generate($request->email, 'numeric', 6, 15);
+    return response()->json([
+        'otp' => $otp->token,
+    ]);
 
-    $data = $response->json();
-    return response()->json($data);
+});
+Route::get('/otp', function (Request $request) {
+    if ((new Otp)->validate($request->email, $request->otp)->status)
+        return response()->json(['message' => 'hopppaaa']);
 });
 
 
@@ -124,10 +129,10 @@ Route::middleware(['auth:api'])->group(function () {
      *  ------------------------------- */
 
     Route::get('/profile', [ProfileController::class, 'index']);
-    Route::post('/profile/password', [ProfileController::class, 'updatepassword']);
-    Route::get('/forget-password', [ProfileController::class, 'ForgetPassword']);
+    Route::put('/auth/password/update', [ProfileController::class, 'updatePassword']);
     Route::get('/logout', [AuthController::class, 'destroy']);
     Route::get('/home', [CampaignController::class, 'completedCampaigns']);
     Route::get('notifications', [NotificationController::class, 'index']);
 });
-Route::get('/requestotp', [ProfileController::class,'requestOTP']);
+Route::get('/requestotp', [ProfileController::class, 'requestOTP']);
+Route::post('/auth/password/reset', [ProfileController::class, 'forgetPassword']);

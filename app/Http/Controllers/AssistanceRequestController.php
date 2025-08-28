@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AssitanceRequest;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 use App\Support\SchemaIntrospector;
@@ -36,12 +37,15 @@ class AssistanceRequestController extends Controller
         $grouped = ['educational' => [], 'medical' => [], 'food' => []];
 
         foreach ($requests as $r) {
+            $date = $r->created_at;
+            $date = Carbon::parse($date);
+            $date = $date->format('Y-m-d');
             $base = [
                 'id' => $r->id,
                 'status' => $r->status,
                 'description' => $r->description,
                 'admin_response' => $r->admin_response,
-                'created_at' => $r->created_at,
+                'created_at' => $date,
                 'updated_at' => $r->updated_at,
             ];
 

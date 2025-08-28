@@ -79,7 +79,15 @@ class CampaignController extends Controller
             $camp->setAttribute('can_cancel', (bool) $volunteerservice->canCancel($user->id, $camp->id));
 
             $camp->unsetRelation('campaignMedia');
-
+            $datett= Carbon::parse($camp->date)->toDateString();
+            $camp->setAttribute('date',$datett);
+            $days_left = -Carbon::parse($camp->start_date)->diffInUTCDays(Carbon::now());
+            if ($days_left < 0) {
+                $days_left = 0;
+            }else{
+                $days_left = floor($days_left );
+            }
+            $camp->setAttribute('days_left', $days_left);
             $start = $camp->start_date ? Carbon::parse($camp->start_date)->format('H:i') : null;
             $end = $camp->end_date ? Carbon::parse($camp->end_date)->format('H:i') : null;
             $camp->setAttribute('work_time', ($start && $end) ? "{$start}-{$end}" : null);
